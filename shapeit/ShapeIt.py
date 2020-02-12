@@ -1,3 +1,6 @@
+import pandas as pd
+from segmenter import *
+
 class ShapeIt:
     """A class used as a container for the ShapeIt algorithm and its associated data structures
 
@@ -18,16 +21,43 @@ class ShapeIt:
             update - update the specification
         """
 
-    def __init__(self):
-        alphabet = dict()
+    def __init__(self, sources, max_mse):
+        self.alphabet = dict()
 
-        sources = []
-        raw_traces = []
-        segmented_traces = []
-        abstract_finite_traces = []
+        self.max_mse = max_mse
 
-        learned_automaton = None
-        learned_expression = None
+        self.sources = sources
+        self.raw_traces = []
+        self.segmented_traces = []
+        self.abstract_finite_traces = []
+
+        self.learned_automaton = None
+        self.learned_expression = None
+
+    def mine_shape(self):
+        self.load()
+        self.segment()
+        self.abstract()
+        self.learn()
+
+    def load(self):
+        for source in self.sources:
+            raw_trace = pd.read_csv(source)
+            self.raw_traces.append(raw_trace)
+
+    def segment(self):
+        for raw_trace in self.raw_traces:
+            x = raw_trace["Time"].values
+            y = raw_trace["Value"].values
+            segment = compute_optimal_splits(x, y, self.max_mse, False)
+            self.segmented_traces.append(segment)
+
+
+    def abstract(self):
+        pass
+
+    def learn(self):
+        pass
 
     @property
     def alphabet(self):
@@ -68,4 +98,3 @@ class ShapeIt:
     @abstract_finite_traces.setter
     def abstract_finite_traces(self, abstract_finite_traces):
         self._abstract_finite_traces = abstract_finite_traces
-
