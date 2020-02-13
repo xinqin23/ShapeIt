@@ -1,5 +1,6 @@
-import argparse
 from shapeit.ShapeIt import ShapeIt
+from options import Options
+
 
 def infer_shape(args):
     max_mse = args.max_mse[0]
@@ -9,14 +10,6 @@ def infer_shape(args):
     shapeit.mine_shape()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Learn a shape expression from positive examples.')
-    parser.add_argument('--input', metavar='filename.csv', nargs='+',
-                        help='List of input files in CSV format.')
-    parser.add_argument('--max-mse', type=float, nargs=1,
-                        help='Maximum mean squared error (MSE).')
-    parser.add_argument('--max-delta-wcss', type=float, nargs=1,
-                        help='Maximum difference between two consecutive WCSS.')
-    args = parser.parse_args()
-
-    infer_shape(args)
+    args = Options().parse()
+    # infer_shape(args)
 
