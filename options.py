@@ -10,7 +10,9 @@ class Options():
 
     def initialize(self):
         # https://docs.python.org/3/library/argparse.html#nargs
-        self.parser.add_argument('--input', default=["data/pulse1-1.csv"], metavar='filename.csv',
+        self.parser.add_argument('--input', default=["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv",
+                                                     "data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"],
+                                 metavar='filename.csv',
                                  nargs='+',
                                  help='List of input files in CSV format.')
         self.parser.add_argument('--max-mse', default=[0.3], type=float, nargs=1,
@@ -23,5 +25,6 @@ class Options():
             self.initialize()
         self.args = self.parser.parse_args()
         return self.args
+
 
 
