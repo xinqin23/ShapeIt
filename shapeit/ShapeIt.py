@@ -1,4 +1,6 @@
 import pandas as pd
+from sklearn.cluster import KMeans, AgglomerativeClustering
+
 from segmenter import *
 
 class ShapeIt:
@@ -15,21 +17,27 @@ class ShapeIt:
             learned_automaton = automaton structure containing the inferred automaton
             learned_expression = data structure containing the inferred expression
 
+            max_mse - Maximum Mean Squared Error (MSE)
+            max_delta_wcss - Maximum difference between two consicutive WCSS
+
         Methods
             get_spec_from_file - create and populate specification object from the text file
             parse - parse the specification
             update - update the specification
         """
 
-    def __init__(self, sources, max_mse):
+    def __init__(self, sources, max_mse, max_delta_wcss):
         self.alphabet = dict()
 
         self.max_mse = max_mse
+        self.max_delta_wcss = max_delta_wcss
 
         self.sources = sources
         self.raw_traces = []
         self.segmented_traces = []
         self.abstract_finite_traces = []
+
+        self.segments = []
 
         self.learned_automaton = None
         self.learned_expression = None
@@ -49,15 +57,34 @@ class ShapeIt:
         for raw_trace in self.raw_traces:
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
-            segment = compute_optimal_splits(x, y, self.max_mse, False)
-            self.segmented_traces.append(segment)
+            segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
+            self.segmented_traces.append(segmented_trace)
+
+            for segment in segmented_trace:
+                start = segment[1]
+                slope = segment[3]
+                offset = segment[4]
+                relative_offset = slope * start + offset
+                duration = segment[6]
+                seg = [slope, relative_offset, duration]
+                self.segments.append(seg)
 
 
     def abstract(self):
-        pass
+        wcss = []
+        nb_clusters = float("inf")
+        for i in range(1, 5):
+            kmeans = KMeans(n_clusters=i, init='k-means++', max_iter=300, n_init=10, random_state=0)
+            pred_y = kmeans.fit_predict(self.segments)
+            wcss.append(kmeans.inertia_)
+        print(pred_y)
 
     def learn(self):
         pass
+
+    def normalize(self, segments):
+        sum_vec = np.sum(segments, axis=0)  # [a,b]
+        return segments / sum_vec
 
     @property
     def alphabet(self):
@@ -74,6 +101,14 @@ class ShapeIt:
     @sources.setter
     def sources(self, sources):
         self._sources = sources
+
+    @property
+    def segments(self):
+        return self._segments
+
+    @segments.setter
+    def segments(self, segments):
+        self._segments = segments
 
     @property
     def raw_traces(self):
