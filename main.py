@@ -9,7 +9,12 @@ def infer_shape(args):
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
-if __name__ == '__main__':
+
+def main():
     args = Options().parse()
-    # infer_shape(args)
+    infer_shape(args)
+
+if __name__ == '__main__':
+    main()
+
 

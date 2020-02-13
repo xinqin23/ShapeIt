@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
-from segmenter import compute_optimal_splits, plot_splits
+from shapeit.segmenter import compute_optimal_splits, plot_splits
 
 
 class ShapeIt:

@@ -9,6 +9,7 @@ class Options():
                                               formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     def initialize(self):
+        # https://docs.python.org/3/library/argparse.html#nargs
         self.parser.add_argument('--input', metavar='filename.csv', nargs='+',
                                  help='List of input files in CSV format.')
         self.parser.add_argument('--max-mse', type=float, nargs=1,
