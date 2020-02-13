@@ -10,12 +10,13 @@ class Options():
 
     def initialize(self):
         # https://docs.python.org/3/library/argparse.html#nargs
-        self.parser.add_argument('--input', metavar='filename.csv', nargs='+',
+        self.parser.add_argument('--input', default=["data/pulse1-1.csv"], metavar='filename.csv',
+                                 nargs='+',
                                  help='List of input files in CSV format.')
-        self.parser.add_argument('--max-mse', type=float, nargs=1,
+        self.parser.add_argument('--max-mse', default=[0.3], type=float, nargs=1,
                                  help='Maximum mean squared error (MSE).')
-        self.parser.add_argument('--max-delta-wcss', type=float, nargs=1,
-                                 help='Maximum difference between two consecutive WCSS.')
+        self.parser.add_argument('--max-delta-wcss', default=[10], type=float, nargs=1,
+                                 help='Maximum difference between two consecutive WCSS.') # todo: default value update
 
     def parse(self):
         if not self.initialized:
