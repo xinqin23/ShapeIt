@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.cluster import KMeans, AgglomerativeClustering
+import numpy as np
 
 from shapeit.segmenter import compute_optimal_splits, plot_splits
 
@@ -39,6 +40,7 @@ class ShapeIt:
         self.abstract_finite_traces = []
 
         self.segments = []
+        self.segments_dimension = 3  # todo: pass this as parameter in
 
         self.learned_automaton = None
         self.learned_expression = None
@@ -55,12 +57,17 @@ class ShapeIt:
             self.raw_traces.append(raw_trace)
 
     def segment(self):
+        # total_time_consumed = 0
         for raw_trace in self.raw_traces:
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
+
+            # todo: time for computing each seg to add around line 66
+            # total_time_consumed += time
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
             self.segmented_traces.append(segmented_trace)
 
+            # todo: for different csv index will change
             for segment in segmented_trace:
                 start = segment[1]
                 slope = segment[3]
@@ -69,7 +76,6 @@ class ShapeIt:
                 duration = segment[6]
                 seg = [slope, relative_offset, duration]
                 self.segments.append(seg)
-
 
     def abstract(self):
         wcss = []
@@ -80,12 +86,24 @@ class ShapeIt:
             wcss.append(kmeans.inertia_)
         print(pred_y)
 
+        # todo: map the pred_y result back to each trace
+
     def learn(self):
         pass
 
     def normalize(self, segments):
         sum_vec = np.sum(segments, axis=0)  # [a,b]
-        return segments / sum_vec
+        normalized_seg = segments / sum_vec  # todo: add a flag to use only normalized term
+
+        # todo: necessary to scale different dim to same order, for clustering to work.
+        max_value = np.max(normalized_seg, axis=0)
+        scale = max_value[0] / max_value[1]
+
+        if self.segments_dimension == 3:
+            scale2 = max_value[0] / max_value[2]
+            return normalized_seg * [1, scale, scale2]
+        else:
+            return normalized_seg * [1, scale]
 
     @property
     def alphabet(self):
