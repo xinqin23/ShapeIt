@@ -1,5 +1,5 @@
 import argparse
-from shapeit.ShapeIt import ShapeIt
+from shapeit.shape_it import ShapeIt
 
 def infer_shape(args):
     max_mse = args.max_mse[0]
