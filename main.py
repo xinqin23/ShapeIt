@@ -1,6 +1,6 @@
 import argparse
 
-from shapeit.ShapeIt import ShapeIt
+from shapeit.shape_it import ShapeIt
 from options import Options
 
 

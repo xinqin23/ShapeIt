@@ -7,7 +7,7 @@ from sklearn.cluster import KMeans, AgglomerativeClustering
 
 from segmenter import *
 
-class ShapeIt:
+class ShapeIt(object):
     """A class used as a container for the ShapeIt algorithm and its associated data structures
 
         Attributes:
@@ -54,6 +54,7 @@ class ShapeIt:
         self.learned_expression = None
 
     def mine_shape(self):
+
         self.load()
         self.segment()
         self.abstract()
@@ -125,13 +126,11 @@ class ShapeIt:
         for letter in letters:
            self.alphabet[letter] = [min(let_seg_dict[letter]), max(let_seg_dict[letter])]
 
-        print(self.alphabet)
-
     def learn(self):
         # Set up CLASSPATH and start the Java Virtual Machine
         learnlib_folder = os.path.join("lib", "learnlib-distribution-0.14.0-dependencies-bundle.jar")
         jpype.addClassPath(learnlib_folder)
-        jpype.startJVM(getDefaultJVMPath(), "-ea")
+        jpype.startJVM(jpype.getDefaultJVMPath(), "-ea")
 
         # Load LearnLib classes needed by the tool
         BlueFringeMDLDFA = jpype.JClass("de.learnlib.algorithms.rpni.BlueFringeMDLDFA")
@@ -145,8 +144,7 @@ class ShapeIt:
         from java.util import Arrays
         from java.util import Collection
 
-        # for abstract_trace in self.abstract_traces:
-        #     alphabet = Alphabet()
+
 
         # Close the Java Virtual Machine
         jpype.shutdownJVM()
