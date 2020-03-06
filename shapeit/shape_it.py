@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.cluster import KMeans, AgglomerativeClustering
 
 
-from segmenter import *
+from .segmenter import *
 
 class ShapeIt(object):
     """A class used as a container for the ShapeIt algorithm and its associated data structures
