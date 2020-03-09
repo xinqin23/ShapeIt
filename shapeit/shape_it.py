@@ -1,8 +1,10 @@
 import os
+import logging
 import jpype
 import jpype.imports
+from jpype.types import *
 import pandas as pd
-from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.cluster import KMeans
 
 
 from .segmenter import *
@@ -11,7 +13,8 @@ class ShapeIt(object):
     """A class used as a container for the ShapeIt algorithm and its associated data structures
 
         Attributes:
-            alphabet : Dictionary of (letter, semantics) pairs
+            alphabet : set of alphabet letters
+            alphabet_box_dict: Dictionary of (letter, bounding box) pairs
 
             sources : list of .csv files containing raw time series
             raw_traces : list of raw traces
@@ -36,7 +39,8 @@ class ShapeIt(object):
         """
 
     def __init__(self, sources, max_mse, max_delta_wcss):
-        self.alphabet = dict()
+        self.alphabet = set()
+        self.alphabet_box_dict = dict()
 
         self.max_mse = max_mse
         self.max_delta_wcss = max_delta_wcss
@@ -54,7 +58,6 @@ class ShapeIt(object):
         self.learned_expression = None
 
     def mine_shape(self):
-
         self.load()
         self.segment()
         self.abstract()
@@ -84,7 +87,6 @@ class ShapeIt(object):
 
     def abstract(self):
         wcss = []
-        nb_clusters = float("inf")
 
         self.normalize()
 
@@ -108,6 +110,7 @@ class ShapeIt(object):
             wcss.append(current_wcss)
 
         letters = set(letters)
+        self.alphabet = letters
         let_seg_dict = dict()
         for letter in letters:
            let_seg_dict[letter] = []
@@ -124,7 +127,7 @@ class ShapeIt(object):
             self.abstract_traces.append(abstract_trace)
 
         for letter in letters:
-           self.alphabet[letter] = [min(let_seg_dict[letter]), max(let_seg_dict[letter])]
+           self.alphabet_box_dict[letter] = [min(let_seg_dict[letter]), max(let_seg_dict[letter])]
 
     def learn(self):
         # Set up CLASSPATH and start the Java Virtual Machine
@@ -134,15 +137,31 @@ class ShapeIt(object):
 
         # Load LearnLib classes needed by the tool
         BlueFringeMDLDFA = jpype.JClass("de.learnlib.algorithms.rpni.BlueFringeMDLDFA")
-        PassiveDFALearner = jpype.JClass("de.learnlib.api.algorithm.PassiveLearningAlgorithm.PassiveDFALearner")
-        DFA = jpype.JClass("net.automatalib.automata.fsa.DFA")
         Visualization = jpype.JClass("net.automatalib.visualization.Visualization")
-        Alphabet = jpype.JClass("net.automatalib.words.Alphabet")
         Word = jpype.JClass("net.automatalib.words.Word")
         Alphabets = jpype.JClass("net.automatalib.words.impl.Alphabets")
 
-        from java.util import Arrays
-        from java.util import Collection
+        from java.util import ArrayList
+
+        alphabet_list = ArrayList()
+        for letter in self.alphabet:
+            alphabet_list.add(JInt(letter))
+
+        alphabet = Alphabets.fromList(alphabet_list)
+        learner = BlueFringeMDLDFA(alphabet)
+
+        words_list = ArrayList()
+        for trace in self.abstract_traces:
+            word_list = ArrayList()
+            for letter in trace:
+                word_list.add(JInt(letter))
+                word = Word.fromList(word_list)
+            words_list.add(word)
+
+        learner.addPositiveSamples(words_list)
+
+        model = learner.computeModel()
+        Visualization.visualize(model, alphabet);
 
 
 
