@@ -66,22 +66,30 @@ class ShapeIt(object):
 
     def mine_shape(self):
         self.load()
+        print("Load finish")
+
         self.segment()
         self.abstract()
         self.learn()
 
+    def get_times(self):
+        total_time = self.total_segment_time + self.total_cluster_time + self.learning_time
+        print("Seg: {}, Cluster: {}, Learn: {}".format(self.total_segment_time, self.total_cluster_time,
+                                                       self.learning_time, total_time))
+
+        return self.total_segment_time, self.total_cluster_time, self.learning_time, total_time
+        # depends on how many seg is called
+
     def load(self):
         for source in self.sources:
-            raw_trace = pd.read_csv(source, sep=r'\s*,\s*')
+            raw_trace = pd.read_csv(source, sep=r'\s*,\s*', nrows=self.sig_length)  # nrows is needed to reduce no
+            # need data
             self.raw_traces.append(raw_trace)
 
     def segment(self):
         for raw_trace in self.raw_traces:
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
-
-            x = x[0:self.sig_length]
-            y = y[0:self.sig_length]
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
@@ -100,11 +108,6 @@ class ShapeIt(object):
                 duration = segment[6]
                 seg = [slope, relative_offset, duration]
                 self.segments.append(seg)
-
-    def get_times(self):
-        print("Seg: {}, Cluster: {}, Learing: {}".format(self.total_segment_time, self.total_cluster_time, self.learning_time))
-        return self.total_segment_time, self.total_cluster_time, self.learning_time  # depends on how many time segment() is
-        # called
 
     def abstract(self):
         wcss = []
@@ -195,7 +198,7 @@ class ShapeIt(object):
         time_consumed = end_time - start_time
         self.learning_time = time_consumed
 
-        Visualization.visualize(model, alphabet);
+        # Visualization.visualize(model, alphabet);
 
 
         # Close the Java Virtual Machine

@@ -2,7 +2,7 @@ import argparse
 
 from shapeit.shape_it import ShapeIt
 from options import Options
-
+import pandas as pd
 
 def infer_shape(args):
     max_mse = args.max_mse[0]  # todo:  max_mse is a list?
@@ -13,24 +13,39 @@ def infer_shape(args):
 
     shapeit.get_times()
 
+
 def gen_table1(args):
-    trace_num = 1
-    sig_length = 10
-    file_list = []
-    for i in range(trace_num):
-        filerootname = '/home/xin/Desktop/generator/experiments/pulse_nb_samples_100000_id_{}.csv'.format(trace_num)
-        file_list.append(filerootname)
+    tabel1 = {'seg': [], 'cluster': [], 'learn': [], 'total': []}
 
-    sources = file_list
-    max_mse = args.max_mse[0]  # todo:  max_mse is a list?
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss, sig_length)
-    shapeit.mine_shape()
-    t1, t2, t3 = shapeit.get_times()
-    total_time_consumed = t1 + t2+ t3
+    trace_num = 10
+    sig_length = 100
+
+    for trace_num in [1, 10, 100]:
+        for sig_length in [10, 100, 1000]:
+            print(trace_num, sig_length)
+
+            file_list = []
+            for i in range(trace_num):
+                filerootname = '/home/xin/Desktop/generator/experiments/pulse_nb_samples_100000_id_{}.csv'.format(trace_num)
+                file_list.append(filerootname)
+
+            print("list created")
+            sources = file_list
+            max_mse = args.max_mse[0]  # todo:  max_mse is a list?
+            max_delta_wcss = args.max_delta_wcss[0]
+            shapeit = ShapeIt(sources, max_mse, max_delta_wcss, sig_length)
+            shapeit.mine_shape()
+
+            print("The time for {} trace is".format(trace_num))
+            ts, tc, tl, tt = shapeit.get_times()
+            tabel1['seg'].append(ts)
+            tabel1['cluster'].append(tc)
+            tabel1['learn'].append(tl)
+            tabel1['total'].append(tt)
+    df = pd.DataFrame.from_dict(tabel1)
+    df.to_csv('table1.csv')
 
 
-    print("The time for {} trace is {}".format(trace_num, total_time_consumed))
 
 
 def main():
