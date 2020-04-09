@@ -11,6 +11,7 @@ def infer_shape(args):
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
+    shapeit.get_times()
 
 def main():
     args = Options().parse()

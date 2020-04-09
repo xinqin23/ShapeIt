@@ -5,6 +5,7 @@ import jpype.imports
 from jpype.types import *
 import pandas as pd
 from sklearn.cluster import KMeans
+from timeit import default_timer as timer
 
 
 from .segmenter import *
@@ -57,6 +58,10 @@ class ShapeIt(object):
         self.learned_automaton = None
         self.learned_expression = None
 
+        self.total_segment_time = 0
+        self.total_cluster_time = 0
+        self.learning_time = 0
+
     def mine_shape(self):
         self.load()
         self.segment()
@@ -72,7 +77,15 @@ class ShapeIt(object):
         for raw_trace in self.raw_traces:
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
+
+
+            start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
+            end_time = timer()
+            time_consumed = end_time - start_time
+            self.total_segment_time += time_consumed
+            # print("Total Elapsed Seg Computation Time: {} sec.".format(time_consumed))
+
             self.segmented_traces.append(segmented_trace)
 
             for segment in segmented_trace:
@@ -84,6 +97,10 @@ class ShapeIt(object):
                 seg = [slope, relative_offset, duration]
                 self.segments.append(seg)
 
+    def get_times(self):
+        print("Seg: {}, Cluster: {}, Learing: {}".format(self.total_segment_time, self.total_cluster_time, self.learning_time))
+        return self.total_segment_time, self.total_cluster_time, self.learning_time  # depends on how many time segment() is
+        # called
 
     def abstract(self):
         wcss = []
@@ -98,9 +115,12 @@ class ShapeIt(object):
         delta_wcss = past_wcss - current_wcss
         wcss.append(current_wcss)
 
+        start_time = timer()
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
+
+
             letters = kmeans.fit_predict(self.n_segments)
 
             past_wcss = current_wcss
@@ -108,6 +128,10 @@ class ShapeIt(object):
             delta_wcss =  past_wcss - current_wcss
 
             wcss.append(current_wcss)
+
+        end_time = timer()
+        self.total_cluster_time += (end_time - start_time)
+
 
         letters = set(letters)
         self.alphabet = letters
@@ -158,11 +182,16 @@ class ShapeIt(object):
                 word = Word.fromList(word_list)
             words_list.add(word)
 
+
+        start_time = timer()
         learner.addPositiveSamples(words_list)
-
         model = learner.computeModel()
-        Visualization.visualize(model, alphabet);
 
+        end_time = timer()
+        time_consumed = end_time - start_time
+        self.learning_time = time_consumed
+
+        Visualization.visualize(model, alphabet);
 
 
         # Close the Java Virtual Machine
