@@ -164,7 +164,9 @@ class ShapeIt(object):
         # Set up CLASSPATH and start the Java Virtual Machine
         learnlib_folder = os.path.join("lib", "learnlib-distribution-0.14.0-dependencies-bundle.jar")
         jpype.addClassPath(learnlib_folder)
-        jpype.startJVM(jpype.getDefaultJVMPath(), "-ea")
+
+        if not jpype.isJVMStarted():
+            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea")
 
         # Load LearnLib classes needed by the tool
         BlueFringeMDLDFA = jpype.JClass("de.learnlib.algorithms.rpni.BlueFringeMDLDFA")
@@ -202,7 +204,7 @@ class ShapeIt(object):
 
 
         # Close the Java Virtual Machine
-        jpype.shutdownJVM()
+        # jpype.shutdownJVM()
 
     def normalize(self):
         slopes = [row[0] for row in self.segments]
