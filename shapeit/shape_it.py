@@ -39,7 +39,7 @@ class ShapeIt(object):
             update - update the specification
         """
 
-    def __init__(self, sources, max_mse, max_delta_wcss):
+    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None):
         self.alphabet = set()
         self.alphabet_box_dict = dict()
 
@@ -62,6 +62,8 @@ class ShapeIt(object):
         self.total_cluster_time = 0
         self.learning_time = 0
 
+        self.sig_length = sig_length
+
     def mine_shape(self):
         self.load()
         self.segment()
@@ -70,7 +72,7 @@ class ShapeIt(object):
 
     def load(self):
         for source in self.sources:
-            raw_trace = pd.read_csv(source)
+            raw_trace = pd.read_csv(source, sep=r'\s*,\s*')
             self.raw_traces.append(raw_trace)
 
     def segment(self):
@@ -78,6 +80,8 @@ class ShapeIt(object):
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
 
+            x = x[0:self.sig_length]
+            y = y[0:self.sig_length]
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
