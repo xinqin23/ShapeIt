@@ -182,8 +182,13 @@ class ShapeIt(object):
         Visualization = jpype.JClass("net.automatalib.visualization.Visualization")
         Word = jpype.JClass("net.automatalib.words.Word")
         Alphabets = jpype.JClass("net.automatalib.words.impl.Alphabets")
+        GraphDOT = jpype.JClass("net.automatalib.serialization.dot.GraphDOT")
 
         from java.util import ArrayList
+        from java.io import BufferedWriter
+        from java.io import FileWriter
+        from java.io import Writer
+        from java.io import IOException;
 
         alphabet_list = ArrayList()
         for letter in self.alphabet:
@@ -211,7 +216,12 @@ class ShapeIt(object):
 
         Visualization.visualize(model, alphabet);
 
+        f = FileWriter("automaton_to_regex/automaton.dot")
+        wf = BufferedWriter(f)
+        GraphDOT.write(model,  wf)
 
+
+        # when not using for loop
         # Close the Java Virtual Machine
         # jpype.shutdownJVM()
 
