@@ -91,6 +91,9 @@ class ShapeIt(object):
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
 
+            plt.plot(x, y)
+            plt.show()
+
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
             end_time = timer()
@@ -125,9 +128,9 @@ class ShapeIt(object):
         start_time = timer()
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
+
+            nb_clusters = 5  # for ekg
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
-
-
             letters = kmeans.fit_predict(self.n_segments)
 
             past_wcss = current_wcss
@@ -156,6 +159,7 @@ class ShapeIt(object):
                 abstract_trace.append(letter[0])
                 let_seg_dict[letter[0]].append([slope, offset, duration])
             self.abstract_traces.append(abstract_trace)
+        print("Abstract traces", self.abstract_traces)
 
         for letter in letters:
            self.alphabet_box_dict[letter] = [min(let_seg_dict[letter]), max(let_seg_dict[letter])]
@@ -200,7 +204,7 @@ class ShapeIt(object):
         time_consumed = end_time - start_time
         self.learning_time = time_consumed
 
-        # Visualization.visualize(model, alphabet);
+        Visualization.visualize(model, alphabet);
 
 
         # Close the Java Virtual Machine

@@ -3,6 +3,7 @@ import argparse
 from shapeit.shape_it import ShapeIt
 from options import Options
 import pandas as pd
+import os
 
 def infer_shape(args):
     max_mse = args.max_mse[0]  # todo:  max_mse is a list?
@@ -43,7 +44,46 @@ def gen_table1(args):
             tabel1['learn'].append(tl)
             tabel1['total'].append(tt)
     df = pd.DataFrame.from_dict(tabel1)
-    df.to_csv('table1.csv')
+    df.to_csv('table1_2.csv')
+
+
+def case_ekg(args):
+    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv']
+    name2 = ['ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
+    max_mse = 0.001   # todo:  max_mse is a list?
+
+    file_list = []
+    for n in name1:
+        file_list.append(os.path.join('ekg_data', n))
+    print("list created")
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+    file_list = []
+    for n in name2:
+        file_list.append(os.path.join('ekg_data', n))
+    print("list created")
+    sources = file_list
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+def case_ekg_2(args):
+    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
+    max_mse = 0.0008   # todo:  max_mse is a list?
+
+    file_list = []
+    for n in name1:
+        file_list.append(os.path.join('ekg_data', n))
+    print("list created")
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
 
 
 
@@ -52,8 +92,10 @@ def main():
     args = Options().parse()
     # infer_shape(args)
 
-    gen_table1(args)
+    # gen_table1(args)
 
+    # case_ekg(args)
+    case_ekg_2(args)
 
 if __name__ == '__main__':
     main()
