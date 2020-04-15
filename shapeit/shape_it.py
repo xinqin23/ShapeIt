@@ -91,6 +91,10 @@ class ShapeIt(object):
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
 
+            # for sony data
+            # x = raw_trace["time"].values
+            # y = raw_trace["value"].values
+
             plt.plot(x, y)
             plt.show()
 
@@ -129,13 +133,14 @@ class ShapeIt(object):
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
 
-            nb_clusters = 5  # for ekg
+            # nb_clusters = 5  # for ekg
+            nb_clusters = 6 # for sony try
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
 
             past_wcss = current_wcss
             current_wcss = kmeans.inertia_
-            delta_wcss =  past_wcss - current_wcss
+            delta_wcss = past_wcss - current_wcss
 
             wcss.append(current_wcss)
 
