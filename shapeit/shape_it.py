@@ -111,6 +111,9 @@ class ShapeIt(object):
             self.total_segment_time += time_consumed
             # print("Total Elapsed Seg Computation Time: {} sec.".format(time_consumed))
 
+            number_of_shape_found = segmented_trace.shape[0]
+            print("Number of segments found: {}".format(number_of_shape_found))
+
             if self.plot_seg:
                 df = pd.DataFrame(segmented_trace,
                                   columns=["Line Nr", "Start Idx", "End Idx", "Slope", "Offset", "Error", "Duration"])
