@@ -170,6 +170,7 @@ class ShapeIt(object):
 
         for letter in letters:
            self.alphabet_box_dict[letter] = [min(let_seg_dict[letter]), max(let_seg_dict[letter])]
+        print(self.alphabet_box_dict)
 
     def learn(self):
         # Set up CLASSPATH and start the Java Virtual Machine
