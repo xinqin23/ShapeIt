@@ -94,12 +94,12 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            x = raw_trace["Time"].values
-            y = raw_trace["Value"].values
+            # x = raw_trace["Time"].values
+            # y = raw_trace["Value"].values
 
             # for sony data
-            # x = raw_trace["time"].values
-            # y = raw_trace["value"].values
+            x = raw_trace["time"].values
+            y = raw_trace["value"].values
 
             # plt.plot(x, y)
             # plt.show()
@@ -150,7 +150,7 @@ class ShapeIt(object):
             nb_clusters = nb_clusters + 1
 
             nb_clusters = 5  # for ekg
-            # nb_clusters = 6 # for sony try
+            nb_clusters = 6 # for sony try
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
 
@@ -170,16 +170,31 @@ class ShapeIt(object):
         for letter in letters:
            let_seg_dict[letter] = []
 
-        for n_segmented_trace in self.n_segmented_traces:
+        #for n_segmented_trace in self.n_segmented_traces:
+        for i in range(len(self.n_segmented_traces)):
+            n_segmented_trace = self.n_segmented_traces[i]
+            segmented_trace = self.segmented_traces[i]
             abstract_trace = []
-            for segment in n_segmented_trace:
-                slope = segment[0]
-                offset = segment[1]
-                duration = segment[2]
-                letter = kmeans.predict([[slope, offset, duration]])
+            #for segment in n_segmented_trace:
+            for j in range(len(n_segmented_trace)):
+                n_segment = n_segmented_trace[j]
+                segment = segmented_trace[j]
+
+                n_slope = n_segment[0]
+                n_offset = n_segment[1]
+                n_duration = n_segment[2]
+
+                start = segment[1]*0.01 # at least for ekg
+                slope = segment[3]
+                offset = segment[4]
+                duration = segment[6]
+                relative_offset = slope * start + offset
+
+                letter = kmeans.predict([[n_slope, n_offset, n_duration]])
                 abstract_trace.append(letter[0])
-                let_seg_dict[letter[0]].append([slope, offset, duration])
+                let_seg_dict[letter[0]].append([slope, relative_offset, duration])
             self.abstract_traces.append(abstract_trace)
+
         print("Abstract traces", self.abstract_traces)
 
         for letter in letters:
