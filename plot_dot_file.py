@@ -1,3 +1,11 @@
+from graphviz import Source
+# path = 'automaton_to_regex/sony_automaton_better.dot' # added redundent info into the .dot file so not working
+# s = Source.from_file(path)
+# s.view()
+
+
+
+temp = """
 digraph g {
 
 	s0 [shape="circle" label="0"];
@@ -17,34 +25,6 @@ __start0 [label="" shape="none" width="0" height="0"];
 __start0 -> s2;
 
 }
-
-
-#states
-s0
-s1
-s2
-s3
-#initial
-s0
-s2
-#accepting
-s1
-s3
-#alphabet
-0
-1
-2
-3
-4
-5
-#transitions
-s0:1>s1
-s2:0>s2
-s2:2>s3
-s2:5>s3
-s3:1>s3
-s3:3>s3
-s3:4>s0
-
-
-2+5+(2+5)(1+3)*(1+3+$)+(0+$)0*(2+5+(2+5)(1+3)*(1+3+$))+(2+5+(0+$)0*(2+5))(1+3)*41
+"""
+s = Source(temp, filename="test.gv", format="png")
+s.view()
