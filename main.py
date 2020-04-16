@@ -50,8 +50,8 @@ def gen_table1(args):
 def case_ekg(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv']
     name2 = ['ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    # max_mse = 0.001   # todo:  max_mse is a list?
-    max_mse = 0.0008
+    max_mse = 0.001   # todo:  max_mse is a list?
+    # max_mse = 0.0008
 
     file_list = []
     for n in name1:
@@ -117,6 +117,28 @@ def case_sony(args):
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
+def case_sony_2(args):
+    name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
+             'SonyAIBORobotSurface1_TEST_5_class_1', 'SonyAIBORobotSurface1_TEST_2_class_2',
+             'SonyAIBORobotSurface1_TEST_3_class_2',
+             'SonyAIBORobotSurface1_TEST_8_class_2']
+    folder = 'sony'
+
+    max_mse = 0.5
+
+
+    file_list = []
+    for n in name1:
+        file_list.append(os.path.join(folder, n + '.csv'))
+    print("list created")
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+
+
 def main():
     args = Options().parse()
     # infer_shape(args)
@@ -124,8 +146,9 @@ def main():
     # gen_table1(args)
 
     # case_ekg(args)
-    case_ekg_2(args)
+    # case_ekg_2(args)
     # case_sony(args)
+    case_sony_2(args)
 
 
 if __name__ == '__main__':

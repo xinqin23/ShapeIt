@@ -6,7 +6,7 @@ from jpype.types import *
 import pandas as pd
 from sklearn.cluster import KMeans
 from timeit import default_timer as timer
-
+import random
 
 from .segmenter import *
 
@@ -63,6 +63,7 @@ class ShapeIt(object):
         self.learning_time = 0
 
         self.sig_length = sig_length
+        random.seed(2)
 
     def mine_shape(self):
         self.load()
@@ -88,8 +89,8 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            x = raw_trace["Time"].values
-            y = raw_trace["Value"].values
+            x = raw_trace["time"].values
+            y = raw_trace["value"].values
 
             # for sony data
             # x = raw_trace["time"].values
@@ -122,6 +123,7 @@ class ShapeIt(object):
         self.normalize()
 
         nb_clusters = 1
+
         kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
         letters = kmeans.fit_predict(self.n_segments)
         current_wcss = kmeans.inertia_
