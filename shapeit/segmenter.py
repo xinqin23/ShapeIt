@@ -270,8 +270,6 @@ def optimalSplit(t, s, i, j, errThreshold, optTable, errTable, regrTable, regrCo
 
 
 def compute_optimal_splits(t, s, errThreshold, debug=False):
-    random.seed(23)
-
     """
     Given a trace 's' of signal values and the corresponding timestamps vector 't', find the best split/segmentation of 's',
     i.e. the split with the minimum number of lines, such that the maximum among the linear regression errors of the splits
