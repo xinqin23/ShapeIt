@@ -77,6 +77,8 @@ def case_ekg_2(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
     max_mse = 0.001  # 0.0008 also works. But error threshold too small do not work
 
+    max_mse = 0.0003
+
     file_list = []
     for n in name1:
         file_list.append(os.path.join('ekg_data', n))
@@ -146,10 +148,10 @@ def main():
     # gen_table1(args)
 
     # case_ekg(args)
-    # case_ekg_2(args)
+    case_ekg_2(args)
     # case_sony(args)
     # case_sony_2(args)
-    case_sony(args)
+    # case_sony(args)
 
 if __name__ == '__main__':
     main()
