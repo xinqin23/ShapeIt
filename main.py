@@ -51,7 +51,7 @@ def case_ekg(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv']
     name2 = ['ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
     max_mse = 0.001   # todo:  max_mse is a list?
-    # max_mse = 0.0008
+    # max_mse = 0.05
 
     file_list = []
     for n in name1:
@@ -75,7 +75,7 @@ def case_ekg(args):
 
 def case_ekg_2(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    max_mse = 0.0008
+    max_mse = 0.001  # 0.0008 also works. But error threshold too small do not work
 
     file_list = []
     for n in name1:
@@ -148,8 +148,8 @@ def main():
     # case_ekg(args)
     # case_ekg_2(args)
     # case_sony(args)
-    case_sony_2(args)
-
+    # case_sony_2(args)
+    case_sony(args)
 
 if __name__ == '__main__':
     main()

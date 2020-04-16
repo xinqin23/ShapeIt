@@ -7,6 +7,9 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from timeit import default_timer as timer
 import random
+import pickle
+import numpy as np
+
 
 from .segmenter import *
 
@@ -89,12 +92,12 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            x = raw_trace["time"].values
-            y = raw_trace["value"].values
+            # x = raw_trace["Time"].values
+            # y = raw_trace["Value"].values
 
             # for sony data
-            # x = raw_trace["time"].values
-            # y = raw_trace["value"].values
+            x = raw_trace["time"].values
+            y = raw_trace["value"].values
 
             plt.plot(x, y)
             plt.show()
@@ -169,8 +172,18 @@ class ShapeIt(object):
         print("Abstract traces", self.abstract_traces)
 
         for letter in letters:
-           self.alphabet_box_dict[letter] = [min(let_seg_dict[letter]), max(let_seg_dict[letter])]
+            let_seg_list = np.array(let_seg_dict[letter])
+            lower_bound = np.min(let_seg_list, axis=0)
+            upper_bound = np.max(let_seg_list, axis=0)
+
+            self.alphabet_box_dict[letter] = [lower_bound, upper_bound]
         print(self.alphabet_box_dict)
+
+        with open('automaton_to_regex/abstract_traces.p', 'wb') as f:
+            pickle.dump(self.abstract_traces, f)
+
+        with open('automaton_to_regex/alphabet_box.p', 'wb') as f:
+            pickle.dump(self.alphabet_box_dict, f)
 
     def learn(self):
         # Set up CLASSPATH and start the Java Virtual Machine
