@@ -92,14 +92,16 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            # x = raw_trace["Time"].values
-            # y = raw_trace["Value"].values
+            x = raw_trace["Time"].values
+            y = raw_trace["Value"].values
 
             # for sony data
-            x = raw_trace["time"].values
-            y = raw_trace["value"].values
+            #x = raw_trace["time"].values
+            #y = raw_trace["value"].values
 
             plt.plot(x, y)
+            plt.title('EKG Patient 2')
+            plt.xlabel('time')
             plt.show()
 
             start_time = timer()
