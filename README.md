@@ -3,10 +3,10 @@ The tool.
 
 
 
-####Installation:
+#### Installation:
 Command line to setup the tool:
 
-#####Setup virtualenv
+##### Setup virtualenv
 ````
 cd ShapeIt
 virtualenv -p python3 venv 
