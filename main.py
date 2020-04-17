@@ -148,8 +148,8 @@ def main():
     case_ekg(args)
     # case_ekg_2(args)
     # case_sony(args)
-    # case_sony_2(args)
-    case_sony(args)
+    case_sony_2(args)
+    # case_sony(args)
 
 if __name__ == '__main__':
     main()

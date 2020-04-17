@@ -42,7 +42,7 @@ class ShapeIt(object):
             update - update the specification
         """
 
-    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None):
+    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None, plog_seg=True):
         self.alphabet = set()
         self.alphabet_box_dict = dict()
 
@@ -66,6 +66,8 @@ class ShapeIt(object):
         self.learning_time = 0
 
         self.sig_length = sig_length
+        self.plot_seg = plog_seg
+
         random.seed(2)
 
     def mine_shape(self):
@@ -99,10 +101,8 @@ class ShapeIt(object):
             #x = raw_trace["time"].values
             #y = raw_trace["value"].values
 
-            plt.plot(x, y)
-            plt.title('EKG Patient 2')
-            plt.xlabel('time')
-            plt.show()
+            # plt.plot(x, y)
+            # plt.show()
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
@@ -110,6 +110,18 @@ class ShapeIt(object):
             time_consumed = end_time - start_time
             self.total_segment_time += time_consumed
             # print("Total Elapsed Seg Computation Time: {} sec.".format(time_consumed))
+
+            number_of_shape_found = segmented_trace.shape[0]
+            print("Number of segments found: {}".format(number_of_shape_found))
+
+            if self.plot_seg:
+                df = pd.DataFrame(segmented_trace,
+                                  columns=["Line Nr", "Start Idx", "End Idx", "Slope", "Offset", "Error", "Duration"])
+                df[["Line Nr", "Start Idx", "End Idx"]] = df[["Line Nr", "Start Idx", "End Idx"]].astype(int)
+                print(tabulate(df, headers='keys', showindex=False, tablefmt='psql'))
+
+                _ = plot_splits(x, y, segmented_trace, plotLegend=False)
+                plt.show()
 
             self.segmented_traces.append(segmented_trace)
 
@@ -140,7 +152,7 @@ class ShapeIt(object):
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
 
-            # nb_clusters = 5  # for ekg
+            nb_clusters = 5  # for ekg
             nb_clusters = 6 # for sony try
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
@@ -161,16 +173,31 @@ class ShapeIt(object):
         for letter in letters:
            let_seg_dict[letter] = []
 
-        for n_segmented_trace in self.n_segmented_traces:
+        #for n_segmented_trace in self.n_segmented_traces:
+        for i in range(len(self.n_segmented_traces)):
+            n_segmented_trace = self.n_segmented_traces[i]
+            segmented_trace = self.segmented_traces[i]
             abstract_trace = []
-            for segment in n_segmented_trace:
-                slope = segment[0]
-                offset = segment[1]
-                duration = segment[2]
-                letter = kmeans.predict([[slope, offset, duration]])
+            #for segment in n_segmented_trace:
+            for j in range(len(n_segmented_trace)):
+                n_segment = n_segmented_trace[j]
+                segment = segmented_trace[j]
+
+                n_slope = n_segment[0]
+                n_offset = n_segment[1]
+                n_duration = n_segment[2]
+
+                start = segment[1]*0.01 # at least for ekg
+                slope = segment[3]
+                offset = segment[4]
+                duration = segment[6]
+                relative_offset = slope * start + offset
+
+                letter = kmeans.predict([[n_slope, n_offset, n_duration]])
                 abstract_trace.append(letter[0])
-                let_seg_dict[letter[0]].append([slope, offset, duration])
+                let_seg_dict[letter[0]].append([slope, relative_offset, duration])
             self.abstract_traces.append(abstract_trace)
+
         print("Abstract traces", self.abstract_traces)
 
         for letter in letters:
