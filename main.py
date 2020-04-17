@@ -4,6 +4,8 @@ from shapeit.shape_it import ShapeIt
 from options import Options
 import pandas as pd
 import os
+import glob
+
 
 def infer_shape(args):
     max_mse = args.max_mse[0]  # todo:  max_mse is a list?
@@ -138,6 +140,35 @@ def case_sony_2(args):
     shapeit.mine_shape()
 
 
+def case_sony_3(args):
+    file_list = []
+    for filename in glob.glob(os.path.join('sony_more_data', "*.csv")):
+        file_list.append(filename)
+
+    sources = file_list
+    max_mse = 0.5
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+def case_kleene_star(args):
+    file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
+    file_list =  ["data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"]
+    file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-repeat.csv"]
+    # file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-2.csv"]
+
+    # file_list = ["data/pulse1-2.csv", "star_data/pulse1-2-2.csv"]
+
+
+    max_mse = 0.1
+
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
 
 def main():
     args = Options().parse()
@@ -148,8 +179,12 @@ def main():
     # case_ekg(args)
     # case_ekg_2(args)
     # case_sony(args)
-    case_sony_2(args)
+    # case_sony_2(args)
     # case_sony(args)
+
+    # case_sony_3(args)
+
+    case_kleene_star(args)
 
 if __name__ == '__main__':
     main()
