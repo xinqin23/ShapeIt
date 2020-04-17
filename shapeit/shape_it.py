@@ -153,7 +153,7 @@ class ShapeIt(object):
             nb_clusters = nb_clusters + 1
 
             nb_clusters = 5  # for ekg
-            # nb_clusters = 6 # for sony try
+            # nb_clusters = 5 # for sony final
             nb_clusters = 4 # for star
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)

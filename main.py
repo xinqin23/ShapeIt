@@ -176,7 +176,7 @@ def main():
 
     # gen_table1(args)
 
-    # case_ekg(args)
+    case_ekg(args)
     # case_ekg_2(args)
     # case_sony(args)
     # case_sony_2(args)
