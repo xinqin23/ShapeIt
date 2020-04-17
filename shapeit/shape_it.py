@@ -115,13 +115,25 @@ class ShapeIt(object):
         for letter in letters:
            let_seg_dict[letter] = []
 
-        for n_segmented_trace in self.n_segmented_traces:
+        #for n_segmented_trace in self.n_segmented_traces:
+        for i in range(len(self.n_segmented_traces)):
+            n_segmented_trace = self.n_segmented_traces[i]
+            segmented_trace = self.segmented_traces[i]
             abstract_trace = []
-            for segment in n_segmented_trace:
+            #for segment in n_segmented_trace:
+            for j in range(len(n_segmented_trace)):
+                n_segment = n_segmented_trace[j]
+                segment = segmented_trace[j]
+
+                n_slope = n_segment[0]
+                n_offset = n_segment[1]
+                n_duration = n_segment[2]
+
                 slope = segment[0]
                 offset = segment[1]
                 duration = segment[2]
-                letter = kmeans.predict([[slope, offset, duration]])
+
+                letter = kmeans.predict([[n_slope, n_offset, n_duration]])
                 abstract_trace.append(letter[0])
                 let_seg_dict[letter[0]].append([slope, offset, duration])
             self.abstract_traces.append(abstract_trace)
