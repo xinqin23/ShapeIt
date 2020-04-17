@@ -256,6 +256,7 @@ class ShapeIt(object):
         start_time = timer()
         learner.addPositiveSamples(words_list)
         model = learner.computeModel()
+        # model = learner.computeModel()
 
         end_time = timer()
         time_consumed = end_time - start_time

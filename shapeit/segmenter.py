@@ -330,6 +330,18 @@ def compute_optimal_splits(t, s, errThreshold, debug=False):
     return resultTable
 
 
+params = {
+   'axes.labelsize': 20,
+    'axes.titlesize': 20,
+   # 'text.fontsize': 8,
+   'legend.fontsize': 9,
+   'xtick.labelsize': 20,
+   'ytick.labelsize': 20,
+   'text.usetex': False,
+   # 'figure.figsize': [4.5, 4.5]
+   }
+plt.rcParams.update(params)
+
 def plot_splits(t, s, resultTable, plotLegend=True):
     """
     Plot the original time series signal (t,s) and a segmentation of it computed with compute_optimal_splits(t,s,errTHreshold).
@@ -343,9 +355,13 @@ def plot_splits(t, s, resultTable, plotLegend=True):
         slope, offset, mse = resultTable[k, 3:6]
         x0, y0 = t[i], slope * t[i] + offset
         x1, y1 = t[j], slope * t[j] + offset
-        plt.plot([x0, x1], [y0, y1], label="line {} (mse={})".format(k + 1, mse))
+        plt.plot([x0, x1], [y0, y1], label="line {} (mse={})".format(k + 1, mse), linewidth=3)
 
     if plotLegend:
         plt.legend()
+
+    plt.xlabel('time')
+    plt.title('Train of pulses')
+    plt.savefig('train_pulses.png')
 
     return fig

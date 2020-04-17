@@ -156,6 +156,7 @@ def case_kleene_star(args):
     file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
     file_list =  ["data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"]
     file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-repeat.csv"]
+    file_list = ["star_data/pulse1-1-repeat.csv"]
     # file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-2.csv"]
 
     # file_list = ["data/pulse1-2.csv", "star_data/pulse1-2-2.csv"]
@@ -176,7 +177,7 @@ def main():
 
     # gen_table1(args)
 
-    case_ekg(args)
+    # case_ekg(args)
     # case_ekg_2(args)
     # case_sony(args)
     # case_sony_2(args)
