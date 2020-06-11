@@ -153,7 +153,8 @@ class ShapeIt(object):
             nb_clusters = nb_clusters + 1
 
             nb_clusters = 5  # for ekg
-            nb_clusters = 6 # for sony try
+            # nb_clusters = 5 # for sony final
+            nb_clusters = 4 # for star
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
 
@@ -187,7 +188,8 @@ class ShapeIt(object):
                 n_offset = n_segment[1]
                 n_duration = n_segment[2]
 
-                start = segment[1]*0.01 # at least for ekg
+                sampling_rate = 1 # 0.01 for ekg #todo: pass in as paramter
+                start = segment[1]*sampling_rate
                 slope = segment[3]
                 offset = segment[4]
                 duration = segment[6]
@@ -254,6 +256,7 @@ class ShapeIt(object):
         start_time = timer()
         learner.addPositiveSamples(words_list)
         model = learner.computeModel()
+        # model = learner.computeModel()
 
         end_time = timer()
         time_consumed = end_time - start_time
