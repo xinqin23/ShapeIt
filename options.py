@@ -15,7 +15,7 @@ class Options():
                                  metavar='filename.csv',
                                  nargs='+',
                                  help='List of input files in CSV format.')
-        self.parser.add_argument('--max-mse', default=[0.3], type=float, nargs=1,
+        self.parser.add_argument('--max-mse', default=[0.5], type=float, nargs=1, #todo: was 0.3
                                  help='Maximum mean squared error (MSE).')
         self.parser.add_argument('--max-delta-wcss', default=[10], type=float, nargs=1,
                                  help='Maximum difference between two consecutive WCSS.') # todo: default value update

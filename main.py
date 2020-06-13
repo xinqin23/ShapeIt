@@ -75,6 +75,21 @@ def case_ekg(args):
     shapeit.mine_shape()
 
 
+def case_ekg_noise(args):
+    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
+    # max_mse = 0.0001  # 0.0008 also works. But error threshold too small do not work
+    max_mse = 0.001
+    file_list = []
+    for n in name1:
+        file_list.append(os.path.join('ekg_data', n))
+    print("list created")
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+
 def case_ekg_2(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
     max_mse = 0.0001  # 0.0008 also works. But error threshold too small do not work
@@ -185,7 +200,9 @@ def main():
 
     # case_sony_3(args)
 
-    case_kleene_star(args)
+    # case_kleene_star(args)
+
+    case_ekg_noise(args)
 
 if __name__ == '__main__':
     main()
