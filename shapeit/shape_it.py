@@ -98,8 +98,8 @@ class ShapeIt(object):
             y = raw_trace["Value"].values
 
             # for sony data
-            # x = raw_trace["time"].values
-            # y = raw_trace["value"].values
+            #x = raw_trace["time"].values
+            #y = raw_trace["value"].values
 
             # plt.plot(x, y)
             # plt.show()
@@ -121,7 +121,7 @@ class ShapeIt(object):
                 print(tabulate(df, headers='keys', showindex=False, tablefmt='psql'))
 
                 _ = plot_splits(x, y, segmented_trace, plotLegend=False)
-                plt.show()
+                #plt.show()
 
             self.segmented_traces.append(segmented_trace)
 
@@ -188,7 +188,8 @@ class ShapeIt(object):
                 n_offset = n_segment[1]
                 n_duration = n_segment[2]
 
-                sampling_rate = 1 # 0.01 for ekg #todo: pass in as paramter
+                # sampling_rate = 1 # 0.01 for ekg #todo: pass in as paramter
+                sampling_rate = 0.01  # 0.01
                 start = segment[1]*sampling_rate
                 slope = segment[3]
                 offset = segment[4]
