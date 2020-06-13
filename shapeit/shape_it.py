@@ -68,6 +68,8 @@ class ShapeIt(object):
         self.sig_length = sig_length
         self.plot_seg = plog_seg
 
+        self.add_noise = True
+
         random.seed(2)
 
     def mine_shape(self):
@@ -97,6 +99,10 @@ class ShapeIt(object):
             x = raw_trace["Time"].values
             y = raw_trace["Value"].values
 
+
+            # todo: add noise here better
+            if self.add_noise:
+                pass
             # for sony data
             #x = raw_trace["time"].values
             #y = raw_trace["value"].values
