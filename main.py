@@ -78,7 +78,7 @@ def case_ekg(args):
 def case_ekg_noise(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
     # max_mse = 0.001  # 0.0008 also works. But error threshold too small do not work
-    max_mse = 0.0001
+    max_mse = 0.001
     file_list = []
     for n in name1:
         file_list.append(os.path.join('ekg_data', n))

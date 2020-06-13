@@ -68,8 +68,8 @@ class ShapeIt(object):
         self.sig_length = sig_length
         self.plot_seg = plog_seg
 
-        self.add_noise = False
-        self.fix_noise_tune_threshold = True
+        self.add_noise = True
+        self.fix_noise_tune_threshold = False
 
         random.seed(2)
 
@@ -104,7 +104,7 @@ class ShapeIt(object):
             # todo: add noise here better
             if self.add_noise:
                 mu = 0
-                sigma = 0.001 # works, x max:8, x min:0. This sigma too small for x.
+                sigma = 0.01 # 0.01, 0.001 works, x max:8, x min:0. This sigma too small for x.
                 # sigma = 0.003 # not work
                 noise_size = len(x)
                 noise = np.random.normal(mu, sigma, noise_size)
