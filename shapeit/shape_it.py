@@ -68,7 +68,8 @@ class ShapeIt(object):
         self.sig_length = sig_length
         self.plot_seg = plog_seg
 
-        self.add_noise = True
+        self.add_noise = False
+        self.fix_noise_tune_threshold = True
 
         random.seed(2)
 
@@ -102,13 +103,26 @@ class ShapeIt(object):
 
             # todo: add noise here better
             if self.add_noise:
-                pass
+                mu = 0
+                sigma = 0.001 # works, x max:8, x min:0. This sigma too small for x.
+                # sigma = 0.003 # not work
+                noise_size = len(x)
+                noise = np.random.normal(mu, sigma, noise_size)
+                y = y + noise
+
+            elif self.fix_noise_tune_threshold:
+                mu = 0
+                sigma = 0.05  # sigma = 1 too big. [-1,1]P = 60%, 25%error, too big.
+                # sigma = 0.003 # not work
+                noise_size = len(x)
+                noise = np.random.normal(mu, sigma, noise_size)
+                y = y + noise
             # for sony data
             #x = raw_trace["time"].values
             #y = raw_trace["value"].values
 
-            # plt.plot(x, y)
-            # plt.show()
+            plt.plot(x, y)
+            plt.show()
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
