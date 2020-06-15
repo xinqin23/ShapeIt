@@ -58,7 +58,18 @@ def cut_data():
 
     step = 833
     start = 50
-    slice1 = start + step
+
+    # brute force writing, thus by the way check the plot for each slice
+    #
+
+    slice1_1 = start + step
+
+    start = slice1_1
+    slice1_2 = slice1_1 + step
+
+    start = slice1_2
+    slice1 = slice1_2 + step
+
     seg1 = patient1[start:slice1]
     t_seg1 = t_p1[start:slice1]
 
@@ -74,7 +85,7 @@ def save_slice(t, signal):
     seg['Time'] = t
     seg['Value'] = signal
     df = pd.DataFrame.from_dict(seg)
-    filename = os.path.join(folder, 'ekg2_4.csv')
+    filename = os.path.join(folder, 'ekg2_7.csv')
     df.to_csv(filename)
 
 
