@@ -76,7 +76,7 @@ def cut_data():
     plt.plot(t_seg1, seg1)
     plt.show()
 
-    save_slice(t_seg1, seg1)
+    save_slice(t_seg1, seg1) 
 
 
 def save_slice(t, signal):
