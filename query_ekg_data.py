@@ -59,33 +59,31 @@ def cut_data():
     step = 833
     start = 50
 
-    # brute force writing, thus by the way check the plot for each slice
-    #
+    index = 7
+    for i in range(10):
+        slice1 = start + step
 
-    slice1_1 = start + step
+        if slice1 >= len(patient1):
+            break
 
-    start = slice1_1
-    slice1_2 = slice1_1 + step
+        seg1 = patient1[start:slice1]
+        t_seg1 = t_p1[start:slice1]
 
-    start = slice1_2
-    slice1 = slice1_2 + step
+        plt.plot(t_seg1, seg1)
+        plt.show()
 
-    seg1 = patient1[start:slice1]
-    t_seg1 = t_p1[start:slice1]
+        save_slice(t_seg1, seg1, index)
+        index += 1
 
-    plt.plot(t_seg1, seg1)
-    plt.show()
+        start = slice1
 
-    save_slice(t_seg1, seg1) 
-
-
-def save_slice(t, signal):
+def save_slice(t, signal, index):
     folder = './ekg_data/ekg_more_data'
     seg = {'Time': [], 'Value': []}
     seg['Time'] = t
     seg['Value'] = signal
     df = pd.DataFrame.from_dict(seg)
-    filename = os.path.join(folder, 'ekg2_7.csv')
+    filename = os.path.join(folder, 'ekg2_{}.csv'.format(index))
     df.to_csv(filename)
 
 
