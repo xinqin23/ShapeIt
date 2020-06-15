@@ -30,7 +30,9 @@ def query_data():
     # the original six signals are of length 70.
     # ekg2 is patient007,  ekg1 is patient024
 
-    patient1, fields = wfdb.rdsamp('s0026lre', pn_dir='ptbdb/patient007', channels=[11], sampfrom=4500, sampto=8000)
+    # deleted last two of patient2
+
+    patient1, fields = wfdb.rdsamp('s0026lre', pn_dir='ptbdb/patient007', channels=[11], sampfrom=4500, sampto=30000)
     # v5
     t_p1 = create_time_list(0.01, len(patient1))
 
@@ -38,12 +40,13 @@ def query_data():
     print(fields)
     print(len(patient1))
 
-    patient2, fields = wfdb.rdsamp('s0083lre', pn_dir='ptbdb/patient024', channels=[11], sampfrom=4500, sampto=8000)
+    patient2, fields = wfdb.rdsamp('s0083lre', pn_dir='ptbdb/patient024', channels=[11], sampfrom=4500, sampto=30000)
     t_p2 = create_time_list(0.01, len(patient2))
     print(fields)
     print(len(patient2))
 
     patient1 = patient1.reshape(len(patient1), 1)[:, 0]
+    patient2 = patient2.reshape(len(patient1), 1)[:, 0]
 
     plt.plot(t_p1, patient1)
     plt.plot(t_p2, patient2)
@@ -52,45 +55,62 @@ def query_data():
     return t_p1, patient1, t_p2, patient2
 
 
-def cut_data():
-    t_p1, patient1, t_p2, patient2 = query_data()
-
-
+def cut_data_patient1(t_p1, patient1):
     step = 833
     start = 50
 
-    index = 7
+    index = 4
     for i in range(10):
         slice1 = start + step
-
         if slice1 >= len(patient1):
             break
-
         seg1 = patient1[start:slice1]
         t_seg1 = t_p1[start:slice1]
 
         plt.plot(t_seg1, seg1)
         plt.show()
 
-        save_slice(t_seg1, seg1, index)
+        save_slice(t_seg1, seg1, index, patient_index=2) # note, the number is reverse by historical problem.
         index += 1
-
         start = slice1
 
-def save_slice(t, signal, index):
+
+def cut_data_patient2(t_p2, patient2):
+    step = 950
+    start = 300
+
+    index = 4
+    for i in range(10):
+        slice1 = start + step
+        if slice1 >= len(patient2):
+            break
+        seg1 = patient2[start:slice1]
+        t_seg1 = t_p2[start:slice1]
+
+        plt.plot(t_seg1, seg1)
+        plt.show()
+
+        save_slice(t_seg1, seg1, index, patient_index=1)
+        index += 1
+        start = slice1
+
+
+def save_slice(t, signal, index, patient_index):
     folder = './ekg_data/ekg_more_data'
     seg = {'Time': [], 'Value': []}
     seg['Time'] = t
     seg['Value'] = signal
     df = pd.DataFrame.from_dict(seg)
-    filename = os.path.join(folder, 'ekg2_{}.csv'.format(index))
+    filename = os.path.join(folder, 'ekg{}_{}.csv'.format(patient_index, index))
     df.to_csv(filename)
 
 
 def main():
-    # query_data()
+    t_p1, patient1, t_p2, patient2 = query_data()
+
     # plot_one_trace()
-    cut_data()
+    cut_data_patient1(t_p1, patient1)
+    # cut_data_patient2(t_p2, patient2)
 
 if __name__ == '__main__':
     main()
