@@ -30,7 +30,7 @@ def query_data():
     # the original six signals are of length 70.
     # ekg2 is patient007,  ekg1 is patient024
 
-    # deleted last two of patient2
+    # deleted last three of patient2
 
     patient1, fields = wfdb.rdsamp('s0026lre', pn_dir='ptbdb/patient007', channels=[11], sampfrom=4500, sampto=30000)
     # v5
@@ -105,12 +105,23 @@ def save_slice(t, signal, index, patient_index):
     df.to_csv(filename)
 
 
+def plot_traces():
+    for i in range(4, 14):
+        file_name = "ekg_data/ekg_more_data/ekg1_{}.csv".format(i)
+        raw_trace = pd.read_csv(file_name, sep=r'\s*,\s*', nrows=None, engine='python')  # the cut was 834
+        x = raw_trace["Time"].values
+        y = raw_trace["Value"].values
+        plt.figure()
+        plt.plot(x, y)
+        plt.show()
+
 def main():
-    t_p1, patient1, t_p2, patient2 = query_data()
+    # t_p1, patient1, t_p2, patient2 = query_data()
 
     # plot_one_trace()
-    cut_data_patient1(t_p1, patient1)
+    # cut_data_patient1(t_p1, patient1)
     # cut_data_patient2(t_p2, patient2)
+    plot_traces()
 
 if __name__ == '__main__':
     main()
