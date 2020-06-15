@@ -2,7 +2,7 @@ import wfdb
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import os
 
 def create_time_list(step_size, len):
     li = []
@@ -28,6 +28,7 @@ def plot_one_trace():
 
 def query_data():
     # the original six signals are of length 70.
+    # ekg2 is patient007,  ekg1 is patient024
 
     patient1, fields = wfdb.rdsamp('s0026lre', pn_dir='ptbdb/patient007', channels=[11], sampfrom=4500, sampto=8000)
     # v5
@@ -42,17 +43,20 @@ def query_data():
     print(fields)
     print(len(patient2))
 
+    patient1 = patient1.reshape(len(patient1), 1)[:, 0]
+
     plt.plot(t_p1, patient1)
     plt.plot(t_p2, patient2)
     plt.show()
 
     return t_p1, patient1, t_p2, patient2
 
+
 def cut_data():
     t_p1, patient1, t_p2, patient2 = query_data()
 
 
-    step = 834
+    step = 833
     start = 50
     slice1 = start + step
     seg1 = patient1[start:slice1]
@@ -61,6 +65,17 @@ def cut_data():
     plt.plot(t_seg1, seg1)
     plt.show()
 
+    save_slice(t_seg1, seg1)
+
+
+def save_slice(t, signal):
+    folder = './ekg_data/ekg_more_data'
+    seg = {'Time': [], 'Value': []}
+    seg['Time'] = t
+    seg['Value'] = signal
+    df = pd.DataFrame.from_dict(seg)
+    filename = os.path.join(folder, 'ekg2_4.csv')
+    df.to_csv(filename)
 
 
 def main():
