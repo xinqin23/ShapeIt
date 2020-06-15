@@ -69,7 +69,7 @@ class ShapeIt(object):
         self.plot_seg = plog_seg
 
         self.add_noise = False
-        self.fix_noise_tune_threshold = True
+        self.fix_noise_tune_threshold = False
 
         random.seed(2)
 
@@ -97,12 +97,18 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            x = raw_trace["Time"].values
-            y = raw_trace["Value"].values
 
+            # for ekg data
+            # x = raw_trace["Time"].values
+            # y = raw_trace["Value"].values
+
+            # for sony data
+            x = raw_trace["time"].values
+            y = raw_trace["value"].values
 
             # todo: add noise here better
             if self.add_noise:
+                print("Noise added!")
                 mu = 0
                 sigma = 0.01 # 0.01, 0.001 works, y max:0.8, y min:-0.2 This sigma too small for x.
                 # sigma = 0.05 # too big, P 30%, over 10% effect on data
@@ -111,15 +117,14 @@ class ShapeIt(object):
                 y = y + noise
 
             elif self.fix_noise_tune_threshold:
+                print("Noise added2!")
                 mu = 0
-                sigma = 0.01  # sigma = 1 too big. [-1,1]P = 60%, 25%error, too big.
+                sigma = 0.05  # sigma = 1 too big. [-1,1]P = 60%, 25%error, too big.
                 # sigma = 0.003 # not work
                 noise_size = len(x)
                 noise = np.random.normal(mu, sigma, noise_size)
                 y = y + noise
-            # for sony data
-            #x = raw_trace["time"].values
-            #y = raw_trace["value"].values
+
 
             plt.plot(x, y)
             plt.show()
