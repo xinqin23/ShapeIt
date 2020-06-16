@@ -5,6 +5,7 @@ from options import Options
 import pandas as pd
 import os
 import glob
+import matplotlib.pyplot as plt
 
 
 def infer_shape(args):
@@ -70,21 +71,6 @@ def case_ekg(args):
         file_list.append(os.path.join('ekg_data', n))
     print("list created")
     sources = file_list
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-
-def case_ekg_noise(args):
-    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    # max_mse = 0.001  # 0.0008 also works. But error threshold too small do not work
-    max_mse = 0.006 # this with noise: sigma 0.05, still can separate.
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join('ekg_data', n))
-    print("list created")
-    sources = file_list
-
     max_delta_wcss = args.max_delta_wcss[0]
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
@@ -156,19 +142,54 @@ def case_sony_2(args):
 
 
 def case_sony_3(args):
-    file_list = []
+    file_list_1 = []
+    file_list_2 = []
     for filename in glob.glob(os.path.join('sony_2/class_1', "*.csv")):
-        file_list.append(filename)
-
-    sources = file_list
-    max_mse = 0.5  # was 0.5
+        file_list_1.append(filename)
+    for filename in glob.glob(os.path.join('sony_2/class_2', "*.csv")):
+        file_list_2.append(filename)
+    max_mse = 0.5
 
     max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.load()
+    shapeit_1 = ShapeIt(file_list_1, 0.5, 0.5)
+    shapeit_1.load()
+    shapeit_1.segment()
+    shapeit_1.abstract()
+    shapeit_1.learn()
 
-    for trace in shapeit.raw_traces:
-        print(trace)
+    shapeit_2 = ShapeIt(file_list_2, 0.55, 5)
+    shapeit_2.load()
+    shapeit_2.segment()
+    shapeit_2.abstract()
+    shapeit_2.learn()
+
+    fig, axs = plt.subplots(1, 2)
+    for trace in shapeit_1.raw_traces:
+        axs[0].plot(trace['time'], trace['value'], color='lightgrey')
+
+    for segmented_trace in shapeit_1.segmented_traces:
+        for segment in segmented_trace:
+            t1 = segment[1]
+            t2 = segment[2]
+            slope = segment[3]
+            offset = segment[4]
+            x0, y0 = t1, slope * t1 + offset
+            x1, y1 = t2, slope * t2 + offset
+            #axs[0].plot([x0, x1], [y0, y1], linewidth=1, color='grey')
+
+    for trace in shapeit_2.raw_traces:
+        axs[1].plot(trace['time'], trace['value'], color='lightgrey')
+        for segmented_trace in shapeit_2.segmented_traces:
+            for segment in segmented_trace:
+                t1 = segment[1]
+                t2 = segment[2]
+                slope = segment[3]
+                offset = segment[4]
+                x0, y0 = t1, slope * t1 + offset
+                x1, y1 = t2, slope * t2 + offset
+                axs[1].plot([x0, x1], [y0, y1], linewidth=1, color='grey')
+
+    plt.show()
 
     #shapeit.mine_shape()
 
@@ -202,15 +223,11 @@ def main():
     #case_ekg_2(args)
     # case_sony(args)
     # case_sony_2(args)
-    case_sony_2(args)
+    # case_sony(args)
 
     case_sony_3(args)
 
     #case_kleene_star(args)
-
-    # case_ekg_noise(args)
-
-
 
 if __name__ == '__main__':
     main()

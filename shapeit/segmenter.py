@@ -360,8 +360,8 @@ def plot_splits(t, s, resultTable, plotLegend=True):
     if plotLegend:
         plt.legend()
 
-    plt.xlabel('time')
-    plt.title('Train of pulses')
-    plt.savefig('train_pulses.png')
+    #plt.xlabel('time')
+    #plt.title('Train of pulses')
+    #plt.savefig('train_pulses.png')
 
     return fig
