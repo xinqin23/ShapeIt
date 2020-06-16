@@ -52,32 +52,35 @@ def gen_table1(args):
 def case_ekg(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv']
     name2 = ['ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    max_mse = 0.001   # todo:  max_mse is a list?
+    # max_mse = 0.001   # todo:  max_mse is a list?
     # max_mse = 0.05
+    max_mse = 0.00045
 
     file_list = []
     for n in name1:
         file_list.append(os.path.join('ekg_data', n))
     print("list created")
-    sources = file_list
+    #sources = file_list
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+    #max_delta_wcss = 1
+    #max_delta_wcss = args.max_delta_wcss[0]
+    #shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    #shapeit.mine_shape()
 
-    file_list = []
+    #file_list = []
     for n in name2:
         file_list.append(os.path.join('ekg_data', n))
     print("list created")
     sources = file_list
-    max_delta_wcss = args.max_delta_wcss[0]
+    max_delta_wcss = 0.00001
+    #max_delta_wcss = args.max_delta_wcss[0]
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
 
 def case_ekg_2(args):
     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    max_mse = 0.0001  # 0.0008 also works. But error threshold too small do not work
+    max_mse = 0.00001  # 0.0008 also works. But error threshold too small do not work
 
     file_list = []
     for n in name1:
@@ -142,7 +145,7 @@ def case_sony_2(args):
 
 def case_sony_3(args):
     file_list = []
-    for filename in glob.glob(os.path.join('sony_2/class_1', "*.csv")):
+    for filename in glob.glob(os.path.join('sony_more_data', "*.csv")):
         file_list.append(filename)
 
     sources = file_list
@@ -150,13 +153,7 @@ def case_sony_3(args):
 
     max_delta_wcss = args.max_delta_wcss[0]
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.load()
-
-    for trace in shapeit.raw_traces:
-        print(trace)
-
-    #shapeit.mine_shape()
-
+    shapeit.mine_shape()
 
 def case_kleene_star(args):
     file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
@@ -183,15 +180,15 @@ def main():
 
     # gen_table1(args)
 
-    #case_ekg(args)
+    case_ekg(args)
     #case_ekg_2(args)
     # case_sony(args)
     # case_sony_2(args)
     # case_sony(args)
 
-    case_sony_3(args)
+    # case_sony_3(args)
 
-    #case_kleene_star(args)
+    # case_kleene_star(args)
 
 if __name__ == '__main__':
     main()

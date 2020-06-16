@@ -94,15 +94,15 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            x = raw_trace["Time"].values
-            y = raw_trace["Value"].values
+            #x = raw_trace["Time"].values
+            #y = raw_trace["Value"].values
 
             # for sony data
-            #x = raw_trace["time"].values
-            #y = raw_trace["value"].values
+            x = raw_trace["time"].values
+            y = raw_trace["value"].values
 
-            # plt.plot(x, y)
-            # plt.show()
+            #plt.plot(x, y)
+            #plt.show()
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
@@ -120,7 +120,7 @@ class ShapeIt(object):
                 df[["Line Nr", "Start Idx", "End Idx"]] = df[["Line Nr", "Start Idx", "End Idx"]].astype(int)
                 print(tabulate(df, headers='keys', showindex=False, tablefmt='psql'))
 
-                _ = plot_splits(x, y, segmented_trace, plotLegend=False)
+                #_ = plot_splits(x, y, segmented_trace, plotLegend=False)
                 #plt.show()
 
             self.segmented_traces.append(segmented_trace)
@@ -152,9 +152,9 @@ class ShapeIt(object):
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
 
-            nb_clusters = 5  # for ekg
+            #nb_clusters = 5  # for ekg
             # nb_clusters = 5 # for sony final
-            nb_clusters = 4 # for star
+            #nb_clusters = 4 # for star
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
 
@@ -231,6 +231,8 @@ class ShapeIt(object):
         Word = jpype.JClass("net.automatalib.words.Word")
         Alphabets = jpype.JClass("net.automatalib.words.impl.Alphabets")
         GraphDOT = jpype.JClass("net.automatalib.serialization.dot.GraphDOT")
+        StringWriter = jpype.JClass("java.io.StringWriter")
+
 
         from java.util import ArrayList
         from java.io import BufferedWriter
@@ -259,15 +261,17 @@ class ShapeIt(object):
         model = learner.computeModel()
         # model = learner.computeModel()
 
+
         end_time = timer()
         time_consumed = end_time - start_time
         self.learning_time = time_consumed
 
-        Visualization.visualize(model, alphabet);
+        #Visualization.visualize(model, alphabet);
 
-        f = FileWriter("automaton_to_regex/automaton.dot")
+
+        f = FileWriter("automaton_to_regex/automaton_dejan.dot")
         wf = BufferedWriter(f)
-        GraphDOT.write(model,  wf)
+        GraphDOT.write(model, wf)
 
 
         # when not using for loop
