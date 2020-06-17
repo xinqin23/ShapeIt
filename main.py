@@ -174,10 +174,26 @@ def case_sony_interpretability(args):
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
+    alphabet_box = shapeit.get_alphabet_box_dict()  # get alphabet param range out.
     # todo: record the alphabet Learnt from case1.
 
     name2 = ['SonyAIBORobotSurface1_TEST_3_class_2']
+    folder = 'sony'
 
+    max_mse = 0.5
+
+    file_list = []
+    for n in name2: # only one trace here
+        file_list.append(os.path.join(folder, n + '.csv'))
+    print("list created")
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    alphabet_box2 = shapeit.segment_only()
+
+    print(alphabet_box)
+    print(alphabet_box2)
 
 def case_sony_3(args): # 40 training data each class
     file_list = []

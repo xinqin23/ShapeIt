@@ -81,6 +81,12 @@ class ShapeIt(object):
         self.abstract()
         self.learn()
 
+    def segment_only(self):
+        self.load()
+        print("Load Finish")
+        self.segment()
+        return self.segments   # each [] from one trace
+
     def get_times(self):
         total_time = self.total_segment_time + self.total_cluster_time + self.learning_time
         print("Seg: {}, Cluster: {}, Learn: {}".format(self.total_segment_time, self.total_cluster_time,
@@ -125,9 +131,8 @@ class ShapeIt(object):
                 noise = np.random.normal(mu, sigma, noise_size)
                 y = y + noise
 
-
-            plt.plot(x, y)
-            plt.show()
+            # plt.plot(x, y)
+            # plt.show()
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
@@ -146,7 +151,7 @@ class ShapeIt(object):
                 print(tabulate(df, headers='keys', showindex=False, tablefmt='psql'))
 
                 _ = plot_splits(x, y, segmented_trace, plotLegend=False)
-                #plt.show()
+                plt.show()
 
             self.segmented_traces.append(segmented_trace)
 
@@ -234,7 +239,7 @@ class ShapeIt(object):
             upper_bound = np.max(let_seg_list, axis=0)
 
             self.alphabet_box_dict[letter] = [lower_bound, upper_bound]
-        print(self.alphabet_box_dict) # this is what we need for interpretability compare
+        print(self.alphabet_box_dict)
 
         with open('automaton_to_regex/abstract_traces.p', 'wb') as f:
             pickle.dump(self.abstract_traces, f)
@@ -243,9 +248,10 @@ class ShapeIt(object):
             pickle.dump(self.alphabet_box_dict, f)
 
     def get_alphabet_box_dict(self):
+        # print(self.alphabet_box_dict)  # this is what we need for interpretability compare
         return self.alphabet_box_dict
 
-    def learn(self):
+    def learn(self):  # Calling Java
         # Set up CLASSPATH and start the Java Virtual Machine
         learnlib_folder = os.path.join("lib", "learnlib-distribution-0.14.0-dependencies-bundle.jar")
         jpype.addClassPath(learnlib_folder)
