@@ -242,6 +242,9 @@ class ShapeIt(object):
         with open('automaton_to_regex/alphabet_box.p', 'wb') as f:
             pickle.dump(self.alphabet_box_dict, f)
 
+    def get_alphabet_box_dict(self):
+        return self.alphabet_box_dict
+
     def learn(self):
         # Set up CLASSPATH and start the Java Virtual Machine
         learnlib_folder = os.path.join("lib", "learnlib-distribution-0.14.0-dependencies-bundle.jar")
