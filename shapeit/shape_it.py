@@ -103,14 +103,17 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
+            # for ekg data from Cristi
+            x = raw_trace["timestamp"]
+            y = raw_trace["value"]
 
             # for ekg data
             # x = raw_trace["Time"].values
             # y = raw_trace["Value"].values
 
             # for sony data
-            x = raw_trace["time"].values
-            y = raw_trace["value"].values
+            # x = raw_trace["time"].values
+            # y = raw_trace["value"].values
 
             # todo: add noise here better
             if self.add_noise:

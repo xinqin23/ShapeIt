@@ -242,6 +242,52 @@ def case_sony_3(args): # 40 training data each class
     shapeit.mine_shape()
 
 
+def case_ekg_whole_data(args):
+    file_list = []
+    for filename in glob.glob(os.path.join('ekg_data/patient007/shifted_x', "*.csv")):
+        file_list.append(filename)
+
+    for filename2 in glob.glob(os.path.join('ekg_data/patient024/shifted_x', "*.csv")):
+        file_list.append(filename2)
+
+
+    sources = file_list
+    max_mse = 0.001  # was 0.5
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+
+def case_ekg_whole_data_seperate(args):
+    file_list = []
+    for filename in glob.glob(os.path.join('ekg_data/patient007/shifted_x', "*.csv")):
+        file_list.append(filename)
+        if len(file_list) > 20:
+            break
+
+    sources = file_list
+    max_mse = 0.001  # was 0.5
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+    file_list2 = []
+    for filename2 in glob.glob(os.path.join('ekg_data/patient024/shifted_x', "*.csv")):
+        file_list2.append(filename2)
+        if len(file_list2) > 20:
+            break
+
+    sources = file_list2
+    max_mse = 0.001  # was 0.5
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+
+
 def case_kleene_star(args):
     file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
     file_list =  ["data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"]
@@ -272,7 +318,10 @@ def main():
 
     # case_sony_2(args)
 
-    case_sony_interpretability(args, True)  # true means use more data
+    # case_sony_interpretability(args, True)  # true means use more data
+
+    # case_ekg_whole_data(args)
+    case_ekg_whole_data_seperate(args)
 
     # case_sony_3(args)
 
