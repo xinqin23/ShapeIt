@@ -221,6 +221,7 @@ class ShapeIt(object):
                 duration = segment[6]
                 relative_offset = slope * start + offset
 
+
                 letter = kmeans.predict([[n_slope, n_offset, n_duration]])
                 abstract_trace.append(letter[0])
                 let_seg_dict[letter[0]].append([slope, relative_offset, duration])
