@@ -156,8 +156,7 @@ def case_sony_2(args):
     shapeit.mine_shape()
 
 
-def case_sony_interpretability(args):
-    more_data = False
+def case_sony_interpretability(args, more_data=False):
     if not more_data:
         name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
                  'SonyAIBORobotSurface1_TEST_5_class_1']  # change 5 to 6
@@ -273,7 +272,7 @@ def main():
 
     # case_sony_2(args)
 
-    case_sony_interpretability(args)
+    case_sony_interpretability(args, True)  # true means use more data
 
     # case_sony_3(args)
 
