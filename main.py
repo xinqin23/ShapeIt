@@ -158,7 +158,7 @@ def case_sony_2(args):
 
 def case_sony_interpretability(args):
     name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
-             'SonyAIBORobotSurface1_TEST_5_class_1']
+             'SonyAIBORobotSurface1_TEST_5_class_1']  # change 5 to 6
 
     folder = 'sony'
 
@@ -175,7 +175,6 @@ def case_sony_interpretability(args):
     shapeit.mine_shape()
 
     alphabet_box = shapeit.get_alphabet_box_dict()  # get alphabet param range out.
-    # todo: record the alphabet Learnt from case1.
 
     name2 = ['SonyAIBORobotSurface1_TEST_3_class_2']
     folder = 'sony'
@@ -194,6 +193,26 @@ def case_sony_interpretability(args):
 
     print(alphabet_box)
     print(alphabet_box2)
+
+    # check where does element in alphabet_box2 belongs in alphabet 1.
+
+    belong = []
+    for seg_index, param in enumerate(alphabet_box2): # each param is of: [slope, relative_offset, duration]
+        for key, value in alphabet_box.items():
+            count = 0
+            for index, par in enumerate(param):
+                min_bound = value[0][index]
+                max_bound = value[1][index]
+                if min_bound <= par <= max_bound:  # has to all three param belongs to the regarding range
+                    count += 1
+                else:
+                    break
+            if count == 3:
+                belong.append([seg_index, key])  # seg, \in key
+
+
+    print(belong)
+
 
 def case_sony_3(args): # 40 training data each class
     file_list = []
