@@ -157,25 +157,41 @@ def case_sony_2(args):
 
 
 def case_sony_interpretability(args):
-    name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
-             'SonyAIBORobotSurface1_TEST_5_class_1']  # change 5 to 6
+    more_data = False
+    if not more_data:
+        name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
+                 'SonyAIBORobotSurface1_TEST_5_class_1']  # change 5 to 6
 
-    folder = 'sony'
+        folder = 'sony'
 
-    max_mse = 0.5
+        max_mse = 0.5
 
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join(folder, n + '.csv'))
-    print("list created")
-    sources = file_list
+        file_list = []
+        for n in name1:
+            file_list.append(os.path.join(folder, n + '.csv'))
+        print("list created")
+        sources = file_list
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+        max_delta_wcss = args.max_delta_wcss[0]
+        shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+        shapeit.mine_shape()
+
+    else:
+        file_list = []
+        for filename in glob.glob(os.path.join('sony_more_data_class_1_only', "*.csv")):
+            file_list.append(filename)
+
+        sources = file_list
+        max_mse = 0.5  # was 0.5
+
+        max_delta_wcss = args.max_delta_wcss[0]
+        shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+        shapeit.mine_shape()
+
 
     alphabet_box = shapeit.get_alphabet_box_dict()  # get alphabet param range out.
 
+    #### Here starts the trace from seg 2.
     name2 = ['SonyAIBORobotSurface1_TEST_3_class_2']
     folder = 'sony'
 
@@ -186,9 +202,9 @@ def case_sony_interpretability(args):
         file_list.append(os.path.join(folder, n + '.csv'))
     print("list created")
     sources = file_list
-
     max_delta_wcss = args.max_delta_wcss[0]
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+
     alphabet_box2 = shapeit.segment_only()
 
     print(alphabet_box)
