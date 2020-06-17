@@ -134,6 +134,7 @@ def case_sony(args):
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
+
 def case_sony_2(args):
     name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
              'SonyAIBORobotSurface1_TEST_5_class_1', 'SonyAIBORobotSurface1_TEST_2_class_2',
@@ -155,7 +156,30 @@ def case_sony_2(args):
     shapeit.mine_shape()
 
 
-def case_sony_3(args):
+def case_sony_interpretability(args):
+    name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
+             'SonyAIBORobotSurface1_TEST_5_class_1']
+
+    folder = 'sony'
+
+    max_mse = 0.5
+
+    file_list = []
+    for n in name1:
+        file_list.append(os.path.join(folder, n + '.csv'))
+    print("list created")
+    sources = file_list
+
+    max_delta_wcss = args.max_delta_wcss[0]
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+
+    # todo: record the alphabet Learnt from case1.
+
+    name2 = ['SonyAIBORobotSurface1_TEST_3_class_2']
+
+
+def case_sony_3(args): # 40 training data each class
     file_list = []
     for filename in glob.glob(os.path.join('sony_more_data', "*.csv")):
         file_list.append(filename)
@@ -167,6 +191,7 @@ def case_sony_3(args):
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
+
 def case_kleene_star(args):
     file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
     file_list =  ["data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"]
@@ -175,7 +200,6 @@ def case_kleene_star(args):
     # file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-2.csv"]
 
     # file_list = ["data/pulse1-2.csv", "star_data/pulse1-2-2.csv"]
-
 
     max_mse = 0.1
 
@@ -195,8 +219,10 @@ def main():
     #case_ekg(args)
     #case_ekg_2(args)
     # case_sony(args)
+
     # case_sony_2(args)
-    case_sony_2(args)
+
+    case_sony_interpretability(args)
 
     # case_sony_3(args)
 

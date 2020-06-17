@@ -177,8 +177,8 @@ class ShapeIt(object):
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
 
-            nb_clusters = 5  # for ekg
-            # nb_clusters = 5 # for sony final
+            # nb_clusters = 5  # for ekg
+            nb_clusters = 5 # for sony final
             # nb_clusters = 4 # for star
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
@@ -221,7 +221,6 @@ class ShapeIt(object):
                 duration = segment[6]
                 relative_offset = slope * start + offset
 
-
                 letter = kmeans.predict([[n_slope, n_offset, n_duration]])
                 abstract_trace.append(letter[0])
                 let_seg_dict[letter[0]].append([slope, relative_offset, duration])
@@ -235,7 +234,7 @@ class ShapeIt(object):
             upper_bound = np.max(let_seg_list, axis=0)
 
             self.alphabet_box_dict[letter] = [lower_bound, upper_bound]
-        print(self.alphabet_box_dict)
+        print(self.alphabet_box_dict) # this is what we need for interpretability compare
 
         with open('automaton_to_regex/abstract_traces.p', 'wb') as f:
             pickle.dump(self.abstract_traces, f)
