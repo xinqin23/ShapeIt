@@ -9,6 +9,7 @@ from timeit import default_timer as timer
 import random
 import pickle
 import numpy as np
+import networkx as nx
 
 
 from .segmenter import *
@@ -71,6 +72,8 @@ class ShapeIt(object):
         self.add_noise = False
         self.fix_noise_tune_threshold = False
 
+        self.kmeans = None
+
         random.seed(2)
 
     def mine_shape(self):
@@ -92,33 +95,38 @@ class ShapeIt(object):
     def load(self):
         for source in self.sources:
             raw_trace = pd.read_csv(source, sep=r'\s*,\s*', nrows=self.sig_length)  # nrows is needed to reduce no
+           # raw_trace = pd.read_csv(source, sep=r'\s*,\s*', nrows=14)
             # need data
             self.raw_traces.append(raw_trace)
 
     def segment(self):
+        i = 0
+        error = -float("inf")
         for raw_trace in self.raw_traces:
             #x = raw_trace["Time"].values
             #y = raw_trace["Value"].values
 
             # for sony data
+            print(i)
             x = raw_trace["time"].values
             y = raw_trace["value"].values
+            i = i + 1
 
             #plt.plot(x, y)
             #plt.show()
 
-            elif self.fix_noise_tune_threshold:
-                print("Noise added2!")
-                mu = 0
-                sigma = 0.05  # sigma = 1 too big. [-1,1]P = 60%, 25%error, too big.
+            #elif self.fix_noise_tune_threshold:
+            #    print("Noise added2!")
+            #mu = 0
+            #sigma = 0.01  # sigma = 1 too big. [-1,1]P = 60%, 25%error, too big.
                 # sigma = 0.003 # not work
-                noise_size = len(x)
-                noise = np.random.normal(mu, sigma, noise_size)
-                y = y + noise
+            #noise_size = len(x)
+            #noise = np.random.normal(mu, sigma, noise_size)
+            #y = y + noise
 
 
-            plt.plot(x, y)
-            plt.show()
+            #plt.plot(x, y)
+            #plt.show()
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
@@ -149,6 +157,62 @@ class ShapeIt(object):
                 duration = segment[6]
                 seg = [slope, relative_offset, duration]
                 self.segments.append(seg)
+                error = max(error, segment[5])
+
+        print('ERROR')
+        print(error)
+
+    def abstract_custom(self):
+        self.normalize()
+
+        letters = self.kmeans.fit_predict(self.n_segments)
+
+        letters = set(letters)
+        self.alphabet = letters
+        let_seg_dict = dict()
+        for letter in letters:
+           let_seg_dict[letter] = []
+
+        #for n_segmented_trace in self.n_segmented_traces:
+        for i in range(len(self.n_segmented_traces)):
+            n_segmented_trace = self.n_segmented_traces[i]
+            segmented_trace = self.segmented_traces[i]
+            abstract_trace = []
+            #for segment in n_segmented_trace:
+            for j in range(len(n_segmented_trace)):
+                n_segment = n_segmented_trace[j]
+                segment = segmented_trace[j]
+
+                n_slope = n_segment[0]
+                n_offset = n_segment[1]
+                n_duration = n_segment[2]
+
+                # sampling_rate = 1 # 0.01 for ekg #todo: pass in as paramter
+                sampling_rate = 0.01  # 0.01
+                start = segment[1]*sampling_rate
+                slope = segment[3]
+                offset = segment[4]
+                duration = segment[6]
+                relative_offset = slope * start + offset
+
+                letter = self.kmeans.predict([[n_slope, n_offset, n_duration]])
+                abstract_trace.append(letter[0])
+                let_seg_dict[letter[0]].append([slope, relative_offset, duration])
+            self.abstract_traces.append(abstract_trace)
+
+
+        for letter in letters:
+            let_seg_list = np.array(let_seg_dict[letter])
+            lower_bound = np.min(let_seg_list, axis=0)
+            upper_bound = np.max(let_seg_list, axis=0)
+
+            self.alphabet_box_dict[letter] = [lower_bound, upper_bound]
+
+        with open('automaton_to_regex/abstract_traces.p', 'wb') as f:
+            pickle.dump(self.abstract_traces, f)
+
+        with open('automaton_to_regex/alphabet_box.p', 'wb') as f:
+            pickle.dump(self.alphabet_box_dict, f)
 
     def abstract(self):
         wcss = []
@@ -170,7 +234,7 @@ class ShapeIt(object):
 
             #nb_clusters = 5  # for ekg
             # nb_clusters = 5 # for sony final
-            #nb_clusters = 4 # for star
+            nb_clusters = 4 # for star
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
 
@@ -217,7 +281,6 @@ class ShapeIt(object):
                 let_seg_dict[letter[0]].append([slope, relative_offset, duration])
             self.abstract_traces.append(abstract_trace)
 
-        print("Abstract traces", self.abstract_traces)
 
         for letter in letters:
             let_seg_list = np.array(let_seg_dict[letter])
@@ -225,13 +288,14 @@ class ShapeIt(object):
             upper_bound = np.max(let_seg_list, axis=0)
 
             self.alphabet_box_dict[letter] = [lower_bound, upper_bound]
-        print(self.alphabet_box_dict)
 
         with open('automaton_to_regex/abstract_traces.p', 'wb') as f:
             pickle.dump(self.abstract_traces, f)
 
         with open('automaton_to_regex/alphabet_box.p', 'wb') as f:
             pickle.dump(self.alphabet_box_dict, f)
+
+        self.kmeans = kmeans
 
     def learn(self):
         # Set up CLASSPATH and start the Java Virtual Machine
@@ -282,17 +346,65 @@ class ShapeIt(object):
         time_consumed = end_time - start_time
         self.learning_time = time_consumed
 
-        #Visualization.visualize(model, alphabet);
+        jpype.shutdownJVM()
+
+    def learn_ekg(self, idx_begin, idx_end):
+        # Set up CLASSPATH and start the Java Virtual Machine
+        learnlib_folder = os.path.join("lib", "learnlib-distribution-0.14.0-dependencies-bundle.jar")
+        jpype.addClassPath(learnlib_folder)
+
+        if not jpype.isJVMStarted():
+            jpype.startJVM(jpype.getDefaultJVMPath(), "-ea")
+
+        # Load LearnLib classes needed by the tool
+        BlueFringeMDLDFA = jpype.JClass("de.learnlib.algorithms.rpni.BlueFringeMDLDFA")
+        Visualization = jpype.JClass("net.automatalib.visualization.Visualization")
+        Word = jpype.JClass("net.automatalib.words.Word")
+        Alphabets = jpype.JClass("net.automatalib.words.impl.Alphabets")
+        GraphDOT = jpype.JClass("net.automatalib.serialization.dot.GraphDOT")
+        StringWriter = jpype.JClass("java.io.StringWriter")
+
+
+        from java.util import ArrayList
+        from java.io import BufferedWriter
+        from java.io import FileWriter
+        from java.io import Writer
+        from java.io import IOException;
+
+        alphabet_list = ArrayList()
+        for letter in self.alphabet:
+            alphabet_list.add(JInt(letter))
+
+        alphabet = Alphabets.fromList(alphabet_list)
+        learner = BlueFringeMDLDFA(alphabet)
+
+        words_list = ArrayList()
+        #for trace in self.abstract_traces:
+        for idx in range(idx_begin, idx_end):
+            trace = self.abstract_traces[idx]
+            word_list = ArrayList()
+            for letter in trace:
+                word_list.add(JInt(letter))
+                word = Word.fromList(word_list)
+            words_list.add(word)
+
+
+        start_time = timer()
+        learner.addPositiveSamples(words_list)
+        model = learner.computeModel()
+        # model = learner.computeModel()
+
+
+        end_time = timer()
+        time_consumed = end_time - start_time
+        self.learning_time = time_consumed
+
+        Visualization.visualize(model, alphabet);
 
 
         f = FileWriter("automaton_to_regex/automaton_dejan.dot")
         wf = BufferedWriter(f)
         GraphDOT.write(model, wf)
-
-
-        # when not using for loop
-        # Close the Java Virtual Machine
-        # jpype.shutdownJVM()
 
     def normalize(self):
         slopes = [row[0] for row in self.segments]
