@@ -1,14 +1,13 @@
 import os
-import logging
+from datetime import datetime
 import jpype
 import jpype.imports
 from jpype.types import *
 import pandas as pd
 from sklearn.cluster import KMeans
 from timeit import default_timer as timer
-import random
-import pickle
-import numpy as np
+from tabulate import tabulate
+import networkx as nx
 
 
 from .segmenter import *
@@ -42,7 +41,7 @@ class ShapeIt(object):
             update - update the specification
         """
 
-    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None, plog_seg=True):
+    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None, plog_seg=True, sampling_period=0.01, time_header="timestamp", value_header="value"):
         self.alphabet = set()
         self.alphabet_box_dict = dict()
 
@@ -58,8 +57,13 @@ class ShapeIt(object):
         self.segments = []
         self.n_segments = []
 
-        self.learned_automaton = None
-        self.learned_expression = None
+        self.learned_automaton = nx.MultiDiGraph()
+        self.learned_expression = ""
+
+        self.sampling_period = sampling_period
+
+        self.time_header = time_header
+        self.value_header = value_header
 
         self.total_segment_time = 0
         self.total_cluster_time = 0
@@ -71,7 +75,7 @@ class ShapeIt(object):
         self.add_noise = False
         self.fix_noise_tune_threshold = False
 
-        random.seed(2)
+        random.seed(datetime.now())
 
     def mine_shape(self):
         self.load()
@@ -103,46 +107,14 @@ class ShapeIt(object):
 
     def segment(self):
         for raw_trace in self.raw_traces:
-            # for ekg data from Cristi
-            x = raw_trace["timestamp"]
-            y = raw_trace["value"]
-
-            # for ekg data
-            # x = raw_trace["Time"].values
-            # y = raw_trace["Value"].values
-
-            # for sony data
-            # x = raw_trace["time"].values
-            # y = raw_trace["value"].values
-
-            # todo: add noise here better
-            if self.add_noise:
-                print("Noise added!")
-                mu = 0
-                sigma = 0.01 # 0.01, 0.001 works, y max:0.8, y min:-0.2 This sigma too small for x.
-                # sigma = 0.05 # too big, P 30%, over 10% effect on data
-                noise_size = len(x)
-                noise = np.random.normal(mu, sigma, noise_size)
-                y = y + noise
-
-            elif self.fix_noise_tune_threshold:
-                print("Noise added2!")
-                mu = 0
-                sigma = 0.05  # sigma = 1 too big. [-1,1]P = 60%, 25%error, too big.
-                # sigma = 0.003 # not work
-                noise_size = len(x)
-                noise = np.random.normal(mu, sigma, noise_size)
-                y = y + noise
-
-            # plt.plot(x, y)
-            # plt.show()
+            x = raw_trace[self.time_header]
+            y = raw_trace[self.value_header]
 
             start_time = timer()
             segmented_trace = compute_optimal_splits(x, y, self.max_mse, False)
             end_time = timer()
             time_consumed = end_time - start_time
             self.total_segment_time += time_consumed
-            # print("Total Elapsed Seg Computation Time: {} sec.".format(time_consumed))
 
             number_of_shape_found = segmented_trace.shape[0]
             print("Number of segments found: {}".format(number_of_shape_found))
@@ -184,10 +156,6 @@ class ShapeIt(object):
         start_time = timer()
         while nb_clusters < len(self.segments) and delta_wcss > self.max_delta_wcss:
             nb_clusters = nb_clusters + 1
-
-            # nb_clusters = 5  # for ekg
-            nb_clusters = 5 # for sony final
-            # nb_clusters = 4 # for star
             kmeans = KMeans(n_clusters=nb_clusters, init='k-means++', max_iter=300, n_init=10, random_state=0)
             letters = kmeans.fit_predict(self.n_segments)
 
@@ -207,12 +175,10 @@ class ShapeIt(object):
         for letter in letters:
            let_seg_dict[letter] = []
 
-        #for n_segmented_trace in self.n_segmented_traces:
         for i in range(len(self.n_segmented_traces)):
             n_segmented_trace = self.n_segmented_traces[i]
             segmented_trace = self.segmented_traces[i]
             abstract_trace = []
-            #for segment in n_segmented_trace:
             for j in range(len(n_segmented_trace)):
                 n_segment = n_segmented_trace[j]
                 segment = segmented_trace[j]
@@ -221,9 +187,7 @@ class ShapeIt(object):
                 n_offset = n_segment[1]
                 n_duration = n_segment[2]
 
-                # sampling_rate = 1 # 0.01 for ekg #todo: pass in as paramter
-                sampling_rate = 0.01  # 0.01
-                start = segment[1]*sampling_rate
+                start = segment[1]*self.sampling_period
                 slope = segment[3]
                 offset = segment[4]
                 duration = segment[6]
@@ -242,16 +206,8 @@ class ShapeIt(object):
             upper_bound = np.max(let_seg_list, axis=0)
 
             self.alphabet_box_dict[letter] = [lower_bound, upper_bound]
-        print(self.alphabet_box_dict)
-
-        with open('automaton_to_regex/abstract_traces.p', 'wb') as f:
-            pickle.dump(self.abstract_traces, f)
-
-        with open('automaton_to_regex/alphabet_box.p', 'wb') as f:
-            pickle.dump(self.alphabet_box_dict, f)
 
     def get_alphabet_box_dict(self):
-        # print(self.alphabet_box_dict)  # this is what we need for interpretability compare
         return self.alphabet_box_dict
 
     def learn(self):  # Calling Java
@@ -294,22 +250,34 @@ class ShapeIt(object):
         start_time = timer()
         learner.addPositiveSamples(words_list)
         model = learner.computeModel()
-        # model = learner.computeModel()
 
         end_time = timer()
         time_consumed = end_time - start_time
         self.learning_time = time_consumed
 
-        Visualization.visualize(model, alphabet);
+        init_state = model.getInitialState()
+        states = model.getStates()
+        transitions = set()
 
-        f = FileWriter("automaton_to_regex/automaton.dot")
-        wf = BufferedWriter(f)
-        GraphDOT.write(model,  wf)
+        for state in states:
+            accepting = False
+            initial = False
+
+            if state.isAccepting():
+                accepting = True
+
+            if state == init_state:
+                initial = True
+
+            self.learned_automaton.add_node(state, initial=initial, accepting=accepting)
+
+            for letter in alphabet_list:
+                transitions = model.getTransitions(state, letter)
+                if not bool(transitions):
+                    self.learned_automaton.add_edge(state, transitions[0], label=letter)
 
 
-        # when not using for loop
-        # Close the Java Virtual Machine
-        # jpype.shutdownJVM()
+        jpype.shutdownJVM()
 
     def normalize(self):
         slopes = [row[0] for row in self.segments]

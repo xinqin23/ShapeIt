@@ -314,14 +314,14 @@ def main():
 
     #case_ekg(args)
     #case_ekg_2(args)
-    # case_sony(args)
+    #case_sony(args)
 
     # case_sony_2(args)
 
     # case_sony_interpretability(args, True)  # true means use more data
 
     # case_ekg_whole_data(args)
-    case_ekg_whole_data_seperate(args)
+    #case_ekg_whole_data_seperate(args)
 
     # case_sony_3(args)
 
