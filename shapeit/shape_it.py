@@ -247,37 +247,135 @@ class ShapeIt(object):
             words_list.add(word)
 
 
-        start_time = timer()
         learner.addPositiveSamples(words_list)
         model = learner.computeModel()
 
-        end_time = timer()
-        time_consumed = end_time - start_time
-        self.learning_time = time_consumed
+        self.learned_automaton = self.learnlib2dfa(model)
 
-        init_state = model.getInitialState()
+        jpype.shutdownJVM()
+
+        self.learned_expression = self.dfa2re(self.learned_automaton)
+
+    def learnlib2dfa(self, model):
+        aut = nx.MultiDiGraph()
         states = model.getStates()
-        transitions = set()
+        init_state = model.getInitialState()
 
         for state in states:
             accepting = False
             initial = False
 
-            if state.isAccepting():
+            if model.isAccepting(state):
                 accepting = True
 
             if state == init_state:
                 initial = True
 
-            self.learned_automaton.add_node(state, initial=initial, accepting=accepting)
+            aut.add_node(state, initial=initial, accepting=accepting)
 
             for letter in alphabet_list:
                 transitions = model.getTransitions(state, letter)
-                if not bool(transitions):
-                    self.learned_automaton.add_edge(state, transitions[0], label=letter)
+                if transitions.size() > 0:
+                    aut.add_edge(state, transitions.toArray()[0], label=str(letter))
+        return aut
 
+    def dfa2re(self, aut, init_node):
+        eps = str(-1)
 
-        jpype.shutdownJVM()
+        accepting = []
+        to_process = []
+        for node, data in aut.nodes(data=True):
+            to_process.append(node)
+            if data['accepting'] == True:
+                accepting.append(node)
+            if data['initial'] == True:
+                init_accepting = data['accepting']
+
+        aut.add_node(-2, initial=True, accepting=False)
+        aut.add_node(init_node, initial=False, accepting=init_accepting)
+        aut.add_edge(-2, init_node, label=eps)
+
+        aut.add_node(-1, initial=False, accepting=True)
+        for acc in accepting:
+            aut.add_node(node, accepting=False)
+            aut.add_edge(acc, -1, label=eps)
+
+        for node in to_process:
+            in_edges = aut.in_edges(node, data=True)
+            out_edges = aut.out_edges(node, data=True)
+
+            self_loops = []
+            if aut.has_edge(node, node):
+                self_loops = aut.get_edge_data(node, node)
+                i = 0
+                for self_loop_datum in self_loops.values():
+                    if i == 0:
+                        self_loop_label = '(' + self_loop_datum['label'] + ')'
+                    else:
+                        self_loop_label = '(' + self_loop_label + ' + ' + self_loop_datum['label'] + ')'
+                    i = i + 1
+
+            edges_to_remove = []
+            edges_to_add = []
+            for in_edge in in_edges:
+                if in_edge[0] == in_edge[1]:
+                    edges_to_remove.append(in_edge)
+                    continue
+
+                for out_edge in out_edges:
+                    if out_edge[0] == out_edge[1]:
+                        edges_to_remove.append(out_edge)
+                        continue
+
+                    in_data = aut.get_edge_data(in_edge[0], in_edge[1])
+                    out_data = aut.get_edge_data(out_edge[0], out_edge[1])
+
+                    label_left = ""
+                    for in_datum in in_data.values():
+                        if not label_left and not in_datum['label'] == '-1':
+                            label_left = in_datum['label']
+                        elif label_left and not in_datum['label'] == '-1':
+                            label_left = '(' + label_left + ' + ' + in_datum['label'] + ')'
+
+                    label_right = ""
+                    for out_datum in out_data.values():
+                        if not label_right and not out_datum['label'] == '-1':
+                            label_right = out_datum['label']
+                        elif label_right and not out_datum['label'] == '-1':
+                            label_right = '(' + label_right + ' + ' + out_datum['label'] + ')'
+
+                    if (aut.has_edge(node, node)):
+                        if not label_left and not label_right:
+                            new_label = self_loop_label + '*'
+                        elif not label_left and label_right:
+                            new_label = self_loop_label + '*.' + label_right
+                        elif label_left and not label_right:
+                            new_label = label_left + '.' + self_loop_label + '*'
+                        else:
+                            new_label = label_left + '.' + self_loop_label + '*.' + label_right
+                    else:
+                        if not label_left and label_right:
+                            new_label = label_right
+                        elif label_left and not label_right:
+                            new_label = label_left
+                        elif label_left and label_right:
+                            new_label = label_left + '.' + label_right
+
+                    edges_to_remove.append(in_edge)
+                    edges_to_remove.append(out_edge)
+                    edges_to_add.append((in_edge[0], out_edge[1], new_label))
+
+            for edge in edges_to_remove:
+                if aut.has_edge(edge[0], edge[1]):
+                    aut.remove_edge(edge[0], edge[1])
+
+            aut.remove_node(node)
+
+            for edge in edges_to_add:
+                aut.add_edge(edge[0], edge[1], label=edge[2])
+
+        data = aut.get_edge_data(-2, -1)
+        return data[0]['label']
 
     def normalize(self):
         slopes = [row[0] for row in self.segments]

@@ -341,27 +341,3 @@ params = {
    # 'figure.figsize': [4.5, 4.5]
    }
 plt.rcParams.update(params)
-
-def plot_splits(t, s, resultTable, plotLegend=True):
-    """
-    Plot the original time series signal (t,s) and a segmentation of it computed with compute_optimal_splits(t,s,errTHreshold).
-    The passed parameter 'resultTable' must be the return of an invokation of compute_optimal_splits().
-    """
-    fig = plt.figure(figsize=(12, 7))
-    plt.plot(t, s, label="signal")
-
-    for k in range(resultTable.shape[0]):
-        i, j = resultTable[k, 1:3].astype(int)
-        slope, offset, mse = resultTable[k, 3:6]
-        x0, y0 = t[i], slope * t[i] + offset
-        x1, y1 = t[j], slope * t[j] + offset
-        plt.plot([x0, x1], [y0, y1], label="line {} (mse={})".format(k + 1, mse), linewidth=3)
-
-    if plotLegend:
-        plt.legend()
-
-    plt.xlabel('time')
-    plt.title('Train of pulses')
-    plt.savefig('train_pulses.png')
-
-    return fig
