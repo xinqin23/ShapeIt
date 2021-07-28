@@ -304,6 +304,47 @@ def case_kleene_star(args):
     max_delta_wcss = args.max_delta_wcss[0]
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
+    
+    
+    
+def case_meat(max_delta):
+    
+    file_list = []
+    for filename in glob.glob(os.path.join('data_ucr/Meat', "*.csv")):
+        file_list.append(filename)
+
+    sources = file_list
+    max_mse = 0.05
+
+    max_delta_wcss = max_delta
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
+    
+def case_wine(max_delta):
+    
+    file_list = []
+    for filename in glob.glob(os.path.join('data_ucr/Wine', "*.csv")):
+        file_list.append(filename)   
+
+    sources = file_list
+    max_mse = 0.05
+
+    max_delta_wcss = max_delta
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss),
+    shapeit.mine_shape()
+    
+def case_fish(max_delta):
+    
+    file_list = []
+    for filename in glob.glob(os.path.join('data_ucr/Fish', "*.csv")):
+        file_list.append(filename)
+    
+    sources = file_list
+    max_mse = 0.05 
+
+    max_delta_wcss = max_delta
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+    shapeit.mine_shape()
 
 
 def main():
@@ -328,6 +369,10 @@ def main():
     # case_kleene_star(args)
 
     # case_ekg_noise(args)
+    
+    #case_meat(10)
+    #case_fish(10)
+    #case_wine(10)
 
 
 
