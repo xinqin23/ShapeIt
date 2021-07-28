@@ -83,7 +83,7 @@ for index_row in range(len(data_1)):
     
     dictionary = {'timestamp': t, 'value': dt}
     positive_example = pd.DataFrame(data = dictionary)
-    positive_example.to_csv(f"positive_examples/{dataset_name}/{dataset_name}_{index_row}.csv", index = False)
+    positive_example.to_csv(f"data_ucr/{dataset_name}/{dataset_name}_{index_row}.csv", index = False)
 
 
 
