@@ -25,10 +25,7 @@
 
 import numpy as np
 import sys
-import matplotlib.pyplot as plt
-
 from tabulate import tabulate
-
 import random
 
 
@@ -328,16 +325,3 @@ def compute_optimal_splits(t, s, errThreshold, debug=False):
         index_start = index_end
 
     return resultTable
-
-
-params = {
-   'axes.labelsize': 20,
-    'axes.titlesize': 20,
-   # 'text.fontsize': 8,
-   'legend.fontsize': 9,
-   'xtick.labelsize': 20,
-   'ytick.labelsize': 20,
-   'text.usetex': False,
-   # 'figure.figsize': [4.5, 4.5]
-   }
-plt.rcParams.update(params)

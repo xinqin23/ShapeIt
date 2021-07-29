@@ -9,8 +9,7 @@ from timeit import default_timer as timer
 from tabulate import tabulate
 import networkx as nx
 
-
-from .segmenter import *
+from shapeit.segmenter import *
 
 class ShapeIt(object):
     """A class used as a container for the ShapeIt algorithm and its associated data structures
@@ -41,7 +40,7 @@ class ShapeIt(object):
             update - update the specification
         """
 
-    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None, plog_seg=True, sampling_period=0.01, time_header="timestamp", value_header="value"):
+    def __init__(self, sources=[], max_mse=0.1, max_delta_wcss=0.01, sig_length=None, plog_seg=True, sampling_period=0.01, time_header="timestamp", value_header="value"):
         self.alphabet = set()
         self.alphabet_box_dict = dict()
 
@@ -124,9 +123,6 @@ class ShapeIt(object):
                                   columns=["Line Nr", "Start Idx", "End Idx", "Slope", "Offset", "Error", "Duration"])
                 df[["Line Nr", "Start Idx", "End Idx"]] = df[["Line Nr", "Start Idx", "End Idx"]].astype(int)
                 print(tabulate(df, headers='keys', showindex=False, tablefmt='psql'))
-
-                _ = plot_splits(x, y, segmented_trace, plotLegend=False)
-                plt.show()
 
             self.segmented_traces.append(segmented_trace)
 
@@ -273,7 +269,7 @@ class ShapeIt(object):
 
             aut.add_node(state, initial=initial, accepting=accepting)
 
-            for letter in alphabet_list:
+            for letter in self.alphabet:
                 transitions = model.getTransitions(state, letter)
                 if transitions.size() > 0:
                     aut.add_edge(state, transitions.toArray()[0], label=str(letter))
