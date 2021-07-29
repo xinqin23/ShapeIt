@@ -276,102 +276,195 @@ class ShapeIt(object):
         return aut
 
     def dfa2re(self, aut, init_node):
-        eps = str(-1)
+        INIT_STATE = -1
+        ACC_STATE = -2
+        EPSILON = 'eps'
 
-        accepting = []
-        to_process = []
-        for node, data in aut.nodes(data=True):
-            to_process.append(node)
-            if data['accepting'] == True:
-                accepting.append(node)
-            if data['initial'] == True:
-                init_accepting = data['accepting']
+        # Collect all states, initial states, and accepting states
+        states_initial = []
+        states_accepting = []
+        states_to_process = []
+        for state, state_data in aut.nodes(data=True):
+            if state_data['initial']:
+                states_initial.append(state)
+            if state_data['accepting']:
+                states_accepting.append(state)
+            states_to_process.append(state)
 
-        aut.add_node(-2, initial=True, accepting=False)
-        aut.add_node(init_node, initial=False, accepting=init_accepting)
-        aut.add_edge(-2, init_node, label=eps)
+        # We expect a single initial state
+        if len(states_initial) != 1:
+            raise Exception("dfa2re: a single initial state is expected")
 
-        aut.add_node(-1, initial=False, accepting=True)
-        for acc in accepting:
-            aut.add_node(node, accepting=False)
-            aut.add_edge(acc, -1, label=eps)
+        # We expect at least one accepting state
+        if len(states_accepting) <= 0:
+            raise Exception("dfa2re: at least one accepting state is expected")
 
-        for node in to_process:
-            in_edges = aut.in_edges(node, data=True)
-            out_edges = aut.out_edges(node, data=True)
+        state_initial = states_initial[0]
+        init_incoming = aut.in_edges(state_initial)
 
-            self_loops = []
-            if aut.has_edge(node, node):
-                self_loops = aut.get_edge_data(node, node)
-                i = 0
-                for self_loop_datum in self_loops.values():
-                    if i == 0:
-                        self_loop_label = '(' + self_loop_datum['label'] + ')'
-                    else:
-                        self_loop_label = '(' + self_loop_label + ' + ' + self_loop_datum['label'] + ')'
-                    i = i + 1
+        # Add a new initial state only if there are incoming edges to the old initial state
+        if len(init_incoming) > 0:
+            is_accepting = aut.nodes[state_initial]['accepting']
+            aut.add_node(INIT_STATE, initial=True, accepting=False)
+            aut.add_node(init_node, initial=False, accepting=is_accepting)
+            aut.add_edge(INIT_STATE, state_initial, label=EPSILON)
+            state_initial = INIT_STATE
 
-            edges_to_remove = []
+
+        # Add a new accepting state
+        # We skip this state if (1) there is only one final state, and
+        # (2) it has no outgoing edges
+        if len(states_accepting) > 1:
+            # Check if there is an accepting state with outgoing edge
+            has_out = False
+            aut.add_node(ACC_STATE, accepting=True)
+            for state_accepting in states_accepting:
+                accepting_outgoing = aut.out_edges(state_accepting)
+                if len(accepting_outgoing) > 0:
+                    has_out = True
+            if has_out:
+                aut.add_node(ACC_STATE, initial=False, accepting=True)
+                for state_accepting in states_accepting:
+                    aut.add_node(state_accepting, accepting=False)
+                    aut.add_edge(state_accepting, ACC_STATE, label=EPSILON)
+
+
+        # Merge multiple edges between two states 0 and 1
+        edges_to_remove = []
+        for source in aut.nodes:
+            for target in aut.nodes:
+                if aut.number_of_edges(source, target) > 1:
+                    edge_labels = aut.get_edge_data(source, target)
+                    counter = 0
+                    new_label = edge_labels[0]['label']
+                    for label in edge_labels:
+                        if counter >= 1:
+                            new_label = new_label + ' + ' + edge_labels[label]['label']
+                        counter = counter + 1
+                        edges_to_remove.append((source, target, label))
+                    new_label = '(' + new_label + ')'
+                    aut.add_edge(source, target, label=new_label)
+
+        for edge in edges_to_remove:
+            aut.remove_edge(edge[0], edge[1], edge[2])
+
+
+        # We now remove state by state
+        for state in states_to_process:
             edges_to_add = []
-            for in_edge in in_edges:
+            edges_to_remove = []
+
+            # Create self-loop label for states with self-loop
+            self_loop_label = ""
+            if aut.has_edge(state, state):
+                self_loop_label = '.(' + aut.get_edge_data(state, state)[0]['label'] + ')*'
+
+            # Consider all pairs of incoming/outgoing edges to/from state
+            for in_edge in aut.in_edges(state):
+                edges_to_remove.append(in_edge)
+                # Ignore the self loop
                 if in_edge[0] == in_edge[1]:
-                    edges_to_remove.append(in_edge)
                     continue
 
-                for out_edge in out_edges:
+                # Ignore self loop
+                for out_edge in aut.out_edges(state):
+                    edges_to_remove.append(out_edge)
                     if out_edge[0] == out_edge[1]:
-                        edges_to_remove.append(out_edge)
                         continue
 
-                    in_data = aut.get_edge_data(in_edge[0], in_edge[1])
-                    out_data = aut.get_edge_data(out_edge[0], out_edge[1])
+                in_label = self.label_union(aut, in_edge)
+                out_label = self.label_union(aut, out_edge)
 
-                    label_left = ""
-                    for in_datum in in_data.values():
-                        if not label_left and not in_datum['label'] == '-1':
-                            label_left = in_datum['label']
-                        elif label_left and not in_datum['label'] == '-1':
-                            label_left = '(' + label_left + ' + ' + in_datum['label'] + ')'
+                new_label = in_label + self_loop_label + '.' + out_label
+                edges_to_add.append((in_edge[0], out_edge[1], new_label))
 
-                    label_right = ""
-                    for out_datum in out_data.values():
-                        if not label_right and not out_datum['label'] == '-1':
-                            label_right = out_datum['label']
-                        elif label_right and not out_datum['label'] == '-1':
-                            label_right = '(' + label_right + ' + ' + out_datum['label'] + ')'
+            # Add edges
+            for edge in edges_to_add:
+                aut.add_edge(edge[0], edge[1], label=edge[2])
 
-                    if (aut.has_edge(node, node)):
-                        if not label_left and not label_right:
-                            new_label = self_loop_label + '*'
-                        elif not label_left and label_right:
-                            new_label = self_loop_label + '*.' + label_right
-                        elif label_left and not label_right:
-                            new_label = label_left + '.' + self_loop_label + '*'
-                        else:
-                            new_label = label_left + '.' + self_loop_label + '*.' + label_right
-                    else:
-                        if not label_left and label_right:
-                            new_label = label_right
-                        elif label_left and not label_right:
-                            new_label = label_left
-                        elif label_left and label_right:
-                            new_label = label_left + '.' + label_right
-
-                    edges_to_remove.append(in_edge)
-                    edges_to_remove.append(out_edge)
-                    edges_to_add.append((in_edge[0], out_edge[1], new_label))
-
+            # Remove edges
             for edge in edges_to_remove:
                 if aut.has_edge(edge[0], edge[1]):
                     aut.remove_edge(edge[0], edge[1])
 
-            aut.remove_node(node)
+        # Remove states
+        for state in states_to_process:
+            aut.remove_node(state)
 
-            for edge in edges_to_add:
-                aut.add_edge(edge[0], edge[1], label=edge[2])
+        return aut.get_edge_data(INIT_STATE, ACC_STATE)[0]['label']
 
-        data = aut.get_edge_data(-2, -1)
-        return data[0]['label']
+
+
+
+    def label_union(self, aut, edge):
+        new_label = ""
+
+        counter = 0
+        for edge_data in aut.get_edge_data(edge[0], edge[1]):
+            label = aut.get_edge_data(edge[0], edge[1])[edge_data]['label']
+            if counter == 0:
+                new_label = label
+            else:
+                new_label = new_label + ' + ' + label
+
+        new_label = '(' + new_label + ')'
+        return new_label
+
+
+
+
+
+
+
+        #             in_data = aut.get_edge_data(in_edge[0], in_edge[1])
+        #             out_data = aut.get_edge_data(out_edge[0], out_edge[1])
+        #
+        #             label_left = ""
+        #             for in_datum in in_data.values():
+        #                 if not label_left and not in_datum['label'] == '-1':
+        #                     label_left = in_datum['label']
+        #                 elif label_left and not in_datum['label'] == '-1':
+        #                     label_left = '(' + label_left + ' + ' + in_datum['label'] + ')'
+        #
+        #             label_right = ""
+        #             for out_datum in out_data.values():
+        #                 if not label_right and not out_datum['label'] == '-1':
+        #                     label_right = out_datum['label']
+        #                 elif label_right and not out_datum['label'] == '-1':
+        #                     label_right = '(' + label_right + ' + ' + out_datum['label'] + ')'
+        #
+        #             if (aut.has_edge(node, node)):
+        #                 if not label_left and not label_right:
+        #                     new_label = self_loop_label + '*'
+        #                 elif not label_left and label_right:
+        #                     new_label = self_loop_label + '*.' + label_right
+        #                 elif label_left and not label_right:
+        #                     new_label = label_left + '.' + self_loop_label + '*'
+        #                 else:
+        #                     new_label = label_left + '.' + self_loop_label + '*.' + label_right
+        #             else:
+        #                 if not label_left and label_right:
+        #                     new_label = label_right
+        #                 elif label_left and not label_right:
+        #                     new_label = label_left
+        #                 elif label_left and label_right:
+        #                     new_label = label_left + '.' + label_right
+        #
+        #             edges_to_remove.append(in_edge)
+        #             edges_to_remove.append(out_edge)
+        #             edges_to_add.append((in_edge[0], out_edge[1], new_label))
+        #
+        #     for edge in edges_to_remove:
+        #         if aut.has_edge(edge[0], edge[1]):
+        #             aut.remove_edge(edge[0], edge[1])
+        #
+        #     aut.remove_node(node)
+        #
+        #     for edge in edges_to_add:
+        #         aut.add_edge(edge[0], edge[1], label=edge[2])
+        #
+        # data = aut.get_edge_data(-2, -1)
+        # return data[0]['label']
 
     def normalize(self):
         slopes = [row[0] for row in self.segments]
@@ -413,7 +506,6 @@ class ShapeIt(object):
         for segmented_trace in self.segmented_traces:
             normalized_segmented_trace = []
             for segment in segmented_trace:
-                normalized_segment = []
                 start = segment[1]
                 slope = segment[3]
                 offset = segment[4]
