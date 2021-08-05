@@ -283,13 +283,13 @@ class ShapeIt(object):
         # Collect all states, initial states, and accepting states
         states_initial = []
         states_accepting = []
-        states_to_process = []
+        states_to_process = set()
         for state, state_data in aut.nodes(data=True):
             if state_data['initial']:
                 states_initial.append(state)
             if state_data['accepting']:
                 states_accepting.append(state)
-            states_to_process.append(state)
+            states_to_process.add(state)
 
         # We expect a single initial state
         if len(states_initial) != 1:
@@ -309,25 +309,29 @@ class ShapeIt(object):
             aut.add_node(init_node, initial=False, accepting=is_accepting)
             aut.add_edge(INIT_STATE, state_initial, label=EPSILON)
             state_initial = INIT_STATE
+        else:
+            states_to_process.remove(state_initial)
 
 
         # Add a new accepting state
         # We skip this state if (1) there is only one final state, and
         # (2) it has no outgoing edges
         if len(states_accepting) > 1:
+            aut.add_node(ACC_STATE, initial=False, accepting=True)
+            for state_accepting in states_accepting:
+                aut.add_node(state_accepting, accepting=False)
+                aut.add_edge(state_accepting, ACC_STATE, label=EPSILON)
+        elif len(states_accepting) == 1:
             # Check if there is an accepting state with outgoing edge
             has_out = False
-            aut.add_node(ACC_STATE, accepting=True)
-            for state_accepting in states_accepting:
-                accepting_outgoing = aut.out_edges(state_accepting)
-                if len(accepting_outgoing) > 0:
-                    has_out = True
-            if has_out:
+            state_accepting = states_accepting[0]
+            accepting_outgoing = aut.out_edges(state_accepting)
+            if len(accepting_outgoing) > 0:
                 aut.add_node(ACC_STATE, initial=False, accepting=True)
-                for state_accepting in states_accepting:
-                    aut.add_node(state_accepting, accepting=False)
-                    aut.add_edge(state_accepting, ACC_STATE, label=EPSILON)
-
+                aut.add_node(state_accepting, accepting=False)
+                aut.add_edge(state_accepting, ACC_STATE, label=EPSILON)
+            else:
+                states_to_process.remove(state_accepting)
 
         # Merge multiple edges between two states 0 and 1
         edges_to_remove = []
@@ -355,9 +359,9 @@ class ShapeIt(object):
             edges_to_remove = []
 
             # Create self-loop label for states with self-loop
-            self_loop_label = ""
+            self_loop_label = "eps"
             if aut.has_edge(state, state):
-                self_loop_label = '.(' + aut.get_edge_data(state, state)[0]['label'] + ')*'
+                self_loop_label = aut.get_edge_data(state, state)[0]['label']
 
             # Consider all pairs of incoming/outgoing edges to/from state
             for in_edge in aut.in_edges(state):
@@ -372,14 +376,16 @@ class ShapeIt(object):
                     if out_edge[0] == out_edge[1]:
                         continue
 
-                in_label = self.label_union(aut, in_edge)
-                out_label = self.label_union(aut, out_edge)
+                    in_label = self.label_union(aut, in_edge)
+                    out_label = self.label_union(aut, out_edge)
 
-                new_label = in_label + self_loop_label + '.' + out_label
-                edges_to_add.append((in_edge[0], out_edge[1], new_label))
+                    new_label = self.label_concat(in_label, self_loop_label, out_label)
+                    edges_to_add.append((in_edge[0], out_edge[1], new_label))
 
             # Add edges
             for edge in edges_to_add:
+#                if aut.has_edge(edge[0], edge[1]):
+#                    aut.remove_edge(edge[0], edge[1])
                 aut.add_edge(edge[0], edge[1], label=edge[2])
 
             # Remove edges
@@ -391,9 +397,33 @@ class ShapeIt(object):
         for state in states_to_process:
             aut.remove_node(state)
 
-        return aut.get_edge_data(INIT_STATE, ACC_STATE)[0]['label']
+        # Merge multiple edges between two states 0 and 1
+        edges_to_remove = []
+        for source in aut.nodes:
+            for target in aut.nodes:
+                if aut.number_of_edges(source, target) > 1:
+                    edge_labels = aut.get_edge_data(source, target)
+                    counter = 0
+                    new_label = edge_labels[0]['label']
+                    for label in edge_labels:
+                        if counter >= 1:
+                            new_label = new_label + ' + ' + edge_labels[label]['label']
+                        counter = counter + 1
+                        edges_to_remove.append((source, target, label))
+                    new_label = '(' + new_label + ')'
+                    aut.add_edge(source, target, label=new_label)
 
+        for edge in edges_to_remove:
+            aut.remove_edge(edge[0], edge[1], edge[2])
 
+        if not aut.number_of_edges(INIT_STATE, ACC_STATE) == 1:
+            raise Exception("Bug in dfa2re: only one transition should remain.")
+
+        edge_labels = aut.get_edge_data(INIT_STATE, ACC_STATE)
+        for label in edge_labels:
+            out = aut.get_edge_data(INIT_STATE, ACC_STATE)[label]['label']
+
+        return out
 
 
     def label_union(self, aut, edge):
@@ -409,6 +439,29 @@ class ShapeIt(object):
 
         new_label = '(' + new_label + ')'
         return new_label
+
+    def label_concat(self, left, middle, right):
+        out = "eps"
+        left_empty = left == "eps" or left == "(eps)"
+        right_empty = right == "eps" or right == "(eps)"
+        middle_empty = middle == "eps" or middle == "(eps)"
+
+        if left_empty and middle_empty and not right_empty:
+            out = right
+        elif left_empty and not middle_empty and right_empty:
+            out = '(' + middle + ')*'
+        elif left_empty and not middle_empty and not right_empty:
+            out = '(' + middle + ')*.' + right
+        elif not left_empty and middle_empty and right_empty:
+            out = left
+        elif not left_empty and not middle_empty and right_empty:
+            out = left + '.(' + middle + ')*'
+        elif not left_empty and middle_empty and not right_empty:
+            out = left + '.' + right
+        elif not left_empty and not middle_empty and not right_empty:
+            out = left + '.(' + middle + ')*.' + right
+
+        return out
 
 
 
