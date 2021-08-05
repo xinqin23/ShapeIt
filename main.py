@@ -231,7 +231,7 @@ def case_sony_interpretability(args, more_data=False):
 
 def case_sony_3(args): # 40 training data each class
     file_list = []
-    for filename in glob.glob(os.path.join('sony_more_data', "*.csv")):
+    for filename in glob.glob(os.path.join('CaseStudies/sony_more_data', "*.csv")):
         file_list.append(filename)
 
     sources = file_list

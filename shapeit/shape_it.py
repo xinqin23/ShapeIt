@@ -9,8 +9,7 @@ from timeit import default_timer as timer
 from tabulate import tabulate
 import networkx as nx
 
-
-from .segmenter import *
+from shapeit.segmenter import *
 
 class ShapeIt(object):
     """A class used as a container for the ShapeIt algorithm and its associated data structures
@@ -41,7 +40,7 @@ class ShapeIt(object):
             update - update the specification
         """
 
-    def __init__(self, sources, max_mse, max_delta_wcss, sig_length=None, plog_seg=True, sampling_period=0.01, time_header="timestamp", value_header="value"):
+    def __init__(self, sources=[], max_mse=0.1, max_delta_wcss=0.01, sig_length=None, plog_seg=True, sampling_period=0.01, time_header="timestamp", value_header="value"):
         self.alphabet = set()
         self.alphabet_box_dict = dict()
 
@@ -124,9 +123,6 @@ class ShapeIt(object):
                                   columns=["Line Nr", "Start Idx", "End Idx", "Slope", "Offset", "Error", "Duration"])
                 df[["Line Nr", "Start Idx", "End Idx"]] = df[["Line Nr", "Start Idx", "End Idx"]].astype(int)
                 print(tabulate(df, headers='keys', showindex=False, tablefmt='psql'))
-
-                _ = plot_splits(x, y, segmented_trace, plotLegend=False)
-                plt.show()
 
             self.segmented_traces.append(segmented_trace)
 
@@ -247,37 +243,281 @@ class ShapeIt(object):
             words_list.add(word)
 
 
-        start_time = timer()
         learner.addPositiveSamples(words_list)
         model = learner.computeModel()
 
-        end_time = timer()
-        time_consumed = end_time - start_time
-        self.learning_time = time_consumed
+        self.learned_automaton = self.learnlib2dfa(model)
 
-        init_state = model.getInitialState()
+        jpype.shutdownJVM()
+
+        self.learned_expression = self.dfa2re(self.learned_automaton)
+
+    def learnlib2dfa(self, model):
+        aut = nx.MultiDiGraph()
         states = model.getStates()
-        transitions = set()
+        init_state = model.getInitialState()
 
         for state in states:
             accepting = False
             initial = False
 
-            if state.isAccepting():
+            if model.isAccepting(state):
                 accepting = True
 
             if state == init_state:
                 initial = True
 
-            self.learned_automaton.add_node(state, initial=initial, accepting=accepting)
+            aut.add_node(state, initial=initial, accepting=accepting)
 
-            for letter in alphabet_list:
+            for letter in self.alphabet:
                 transitions = model.getTransitions(state, letter)
-                if not bool(transitions):
-                    self.learned_automaton.add_edge(state, transitions[0], label=letter)
+                if transitions.size() > 0:
+                    aut.add_edge(state, transitions.toArray()[0], label=str(letter))
+        return aut
+
+    def dfa2re(self, aut, init_node):
+        INIT_STATE = -1
+        ACC_STATE = -2
+        EPSILON = 'eps'
+
+        # Collect all states, initial states, and accepting states
+        states_initial = []
+        states_accepting = []
+        states_to_process = set()
+        for state, state_data in aut.nodes(data=True):
+            if state_data['initial']:
+                states_initial.append(state)
+            if state_data['accepting']:
+                states_accepting.append(state)
+            states_to_process.add(state)
+
+        # We expect a single initial state
+        if len(states_initial) != 1:
+            raise Exception("dfa2re: a single initial state is expected")
+
+        # We expect at least one accepting state
+        if len(states_accepting) <= 0:
+            raise Exception("dfa2re: at least one accepting state is expected")
+
+        state_initial = states_initial[0]
+        init_incoming = aut.in_edges(state_initial)
+
+        # Add a new initial state only if there are incoming edges to the old initial state
+        if len(init_incoming) > 0:
+            is_accepting = aut.nodes[state_initial]['accepting']
+            aut.add_node(INIT_STATE, initial=True, accepting=False)
+            aut.add_node(init_node, initial=False, accepting=is_accepting)
+            aut.add_edge(INIT_STATE, state_initial, label=EPSILON)
+            state_initial = INIT_STATE
+        else:
+            states_to_process.remove(state_initial)
 
 
-        jpype.shutdownJVM()
+        # Add a new accepting state
+        # We skip this state if (1) there is only one final state, and
+        # (2) it has no outgoing edges
+        if len(states_accepting) > 1:
+            aut.add_node(ACC_STATE, initial=False, accepting=True)
+            for state_accepting in states_accepting:
+                aut.add_node(state_accepting, accepting=False)
+                aut.add_edge(state_accepting, ACC_STATE, label=EPSILON)
+        elif len(states_accepting) == 1:
+            # Check if there is an accepting state with outgoing edge
+            has_out = False
+            state_accepting = states_accepting[0]
+            accepting_outgoing = aut.out_edges(state_accepting)
+            if len(accepting_outgoing) > 0:
+                aut.add_node(ACC_STATE, initial=False, accepting=True)
+                aut.add_node(state_accepting, accepting=False)
+                aut.add_edge(state_accepting, ACC_STATE, label=EPSILON)
+            else:
+                states_to_process.remove(state_accepting)
+
+        # Merge multiple edges between two states 0 and 1
+        edges_to_remove = []
+        for source in aut.nodes:
+            for target in aut.nodes:
+                if aut.number_of_edges(source, target) > 1:
+                    edge_labels = aut.get_edge_data(source, target)
+                    counter = 0
+                    new_label = edge_labels[0]['label']
+                    for label in edge_labels:
+                        if counter >= 1:
+                            new_label = new_label + ' + ' + edge_labels[label]['label']
+                        counter = counter + 1
+                        edges_to_remove.append((source, target, label))
+                    new_label = '(' + new_label + ')'
+                    aut.add_edge(source, target, label=new_label)
+
+        for edge in edges_to_remove:
+            aut.remove_edge(edge[0], edge[1], edge[2])
+
+
+        # We now remove state by state
+        for state in states_to_process:
+            edges_to_add = []
+            edges_to_remove = []
+
+            # Create self-loop label for states with self-loop
+            self_loop_label = "eps"
+            if aut.has_edge(state, state):
+                self_loop_label = aut.get_edge_data(state, state)[0]['label']
+
+            # Consider all pairs of incoming/outgoing edges to/from state
+            for in_edge in aut.in_edges(state):
+                edges_to_remove.append(in_edge)
+                # Ignore the self loop
+                if in_edge[0] == in_edge[1]:
+                    continue
+
+                # Ignore self loop
+                for out_edge in aut.out_edges(state):
+                    edges_to_remove.append(out_edge)
+                    if out_edge[0] == out_edge[1]:
+                        continue
+
+                    in_label = self.label_union(aut, in_edge)
+                    out_label = self.label_union(aut, out_edge)
+
+                    new_label = self.label_concat(in_label, self_loop_label, out_label)
+                    edges_to_add.append((in_edge[0], out_edge[1], new_label))
+
+            # Add edges
+            for edge in edges_to_add:
+#                if aut.has_edge(edge[0], edge[1]):
+#                    aut.remove_edge(edge[0], edge[1])
+                aut.add_edge(edge[0], edge[1], label=edge[2])
+
+            # Remove edges
+            for edge in edges_to_remove:
+                if aut.has_edge(edge[0], edge[1]):
+                    aut.remove_edge(edge[0], edge[1])
+
+        # Remove states
+        for state in states_to_process:
+            aut.remove_node(state)
+
+        # Merge multiple edges between two states 0 and 1
+        edges_to_remove = []
+        for source in aut.nodes:
+            for target in aut.nodes:
+                if aut.number_of_edges(source, target) > 1:
+                    edge_labels = aut.get_edge_data(source, target)
+                    counter = 0
+                    new_label = edge_labels[0]['label']
+                    for label in edge_labels:
+                        if counter >= 1:
+                            new_label = new_label + ' + ' + edge_labels[label]['label']
+                        counter = counter + 1
+                        edges_to_remove.append((source, target, label))
+                    new_label = '(' + new_label + ')'
+                    aut.add_edge(source, target, label=new_label)
+
+        for edge in edges_to_remove:
+            aut.remove_edge(edge[0], edge[1], edge[2])
+
+        if not aut.number_of_edges(INIT_STATE, ACC_STATE) == 1:
+            raise Exception("Bug in dfa2re: only one transition should remain.")
+
+        edge_labels = aut.get_edge_data(INIT_STATE, ACC_STATE)
+        for label in edge_labels:
+            out = aut.get_edge_data(INIT_STATE, ACC_STATE)[label]['label']
+
+        return out
+
+
+    def label_union(self, aut, edge):
+        new_label = ""
+
+        counter = 0
+        for edge_data in aut.get_edge_data(edge[0], edge[1]):
+            label = aut.get_edge_data(edge[0], edge[1])[edge_data]['label']
+            if counter == 0:
+                new_label = label
+            else:
+                new_label = new_label + ' + ' + label
+
+        new_label = '(' + new_label + ')'
+        return new_label
+
+    def label_concat(self, left, middle, right):
+        out = "eps"
+        left_empty = left == "eps" or left == "(eps)"
+        right_empty = right == "eps" or right == "(eps)"
+        middle_empty = middle == "eps" or middle == "(eps)"
+
+        if left_empty and middle_empty and not right_empty:
+            out = right
+        elif left_empty and not middle_empty and right_empty:
+            out = '(' + middle + ')*'
+        elif left_empty and not middle_empty and not right_empty:
+            out = '(' + middle + ')*.' + right
+        elif not left_empty and middle_empty and right_empty:
+            out = left
+        elif not left_empty and not middle_empty and right_empty:
+            out = left + '.(' + middle + ')*'
+        elif not left_empty and middle_empty and not right_empty:
+            out = left + '.' + right
+        elif not left_empty and not middle_empty and not right_empty:
+            out = left + '.(' + middle + ')*.' + right
+
+        return out
+
+
+
+
+
+
+
+        #             in_data = aut.get_edge_data(in_edge[0], in_edge[1])
+        #             out_data = aut.get_edge_data(out_edge[0], out_edge[1])
+        #
+        #             label_left = ""
+        #             for in_datum in in_data.values():
+        #                 if not label_left and not in_datum['label'] == '-1':
+        #                     label_left = in_datum['label']
+        #                 elif label_left and not in_datum['label'] == '-1':
+        #                     label_left = '(' + label_left + ' + ' + in_datum['label'] + ')'
+        #
+        #             label_right = ""
+        #             for out_datum in out_data.values():
+        #                 if not label_right and not out_datum['label'] == '-1':
+        #                     label_right = out_datum['label']
+        #                 elif label_right and not out_datum['label'] == '-1':
+        #                     label_right = '(' + label_right + ' + ' + out_datum['label'] + ')'
+        #
+        #             if (aut.has_edge(node, node)):
+        #                 if not label_left and not label_right:
+        #                     new_label = self_loop_label + '*'
+        #                 elif not label_left and label_right:
+        #                     new_label = self_loop_label + '*.' + label_right
+        #                 elif label_left and not label_right:
+        #                     new_label = label_left + '.' + self_loop_label + '*'
+        #                 else:
+        #                     new_label = label_left + '.' + self_loop_label + '*.' + label_right
+        #             else:
+        #                 if not label_left and label_right:
+        #                     new_label = label_right
+        #                 elif label_left and not label_right:
+        #                     new_label = label_left
+        #                 elif label_left and label_right:
+        #                     new_label = label_left + '.' + label_right
+        #
+        #             edges_to_remove.append(in_edge)
+        #             edges_to_remove.append(out_edge)
+        #             edges_to_add.append((in_edge[0], out_edge[1], new_label))
+        #
+        #     for edge in edges_to_remove:
+        #         if aut.has_edge(edge[0], edge[1]):
+        #             aut.remove_edge(edge[0], edge[1])
+        #
+        #     aut.remove_node(node)
+        #
+        #     for edge in edges_to_add:
+        #         aut.add_edge(edge[0], edge[1], label=edge[2])
+        #
+        # data = aut.get_edge_data(-2, -1)
+        # return data[0]['label']
 
     def normalize(self):
         slopes = [row[0] for row in self.segments]
@@ -319,7 +559,6 @@ class ShapeIt(object):
         for segmented_trace in self.segmented_traces:
             normalized_segmented_trace = []
             for segment in segmented_trace:
-                normalized_segment = []
                 start = segment[1]
                 slope = segment[3]
                 offset = segment[4]
