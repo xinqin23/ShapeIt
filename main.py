@@ -49,261 +49,260 @@ def gen_table1(args):
     df.to_csv('table1_2.csv')
 
 
-def case_ekg(args):
-    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv']
-    name2 = ['ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    max_mse = 0.001   # todo:  max_mse is a list?
-    # max_mse = 0.05
-
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join('ekg_data', n))
-    print("list created")
-    sources = file_list
-
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-    file_list = []
-    for n in name2:
-        file_list.append(os.path.join('ekg_data', n))
-    print("list created")
-    sources = file_list
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-
-def case_ekg_noise(args):
-    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    # max_mse = 0.001  # 0.0008 also works. But error threshold too small do not work
-    max_mse = 0.006 # this with noise: sigma 0.05, still can separate.
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join('ekg_data', n))
-    print("list created")
-    sources = file_list
-
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-
-def case_ekg_2(args):
-    name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
-    max_mse = 0.0001  # 0.0008 also works. But error threshold too small do not work
-
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join('ekg_data', n))
-    print("list created")
-    sources = file_list
-
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-
-def case_sony(args):
-    name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
-             'SonyAIBORobotSurface1_TEST_5_class_1']
-    name2 = ['SonyAIBORobotSurface1_TEST_2_class_2', 'SonyAIBORobotSurface1_TEST_3_class_2',
-             'SonyAIBORobotSurface1_TEST_8_class_2']
-    folder = 'sony'
+# def case_ekg(args):
+#     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv']
+#     name2 = ['ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
+#     max_mse = 0.001   # todo:  max_mse is a list?
+#     # max_mse = 0.05
+
+#     file_list = []
+#     for n in name1:
+#         file_list.append(os.path.join('ekg_data', n))
+#     print("list created")
+#     sources = file_list
+
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
+
+#     file_list = []
+#     for n in name2:
+#         file_list.append(os.path.join('ekg_data', n))
+#     print("list created")
+#     sources = file_list
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
+
+
+# def case_ekg_noise(args):
+#     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
+#     # max_mse = 0.001  # 0.0008 also works. But error threshold too small do not work
+#     max_mse = 0.006 # this with noise: sigma 0.05, still can separate.
+#     file_list = []
+#     for n in name1:
+#         file_list.append(os.path.join('ekg_data', n))
+#     print("list created")
+#     sources = file_list
+
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
+
+
+# def case_ekg_2(args):
+#     name1 = ['ekg2_1.csv', 'ekg2_2.csv', 'ekg2_3.csv', 'ekg_1.csv', 'ekg_2.csv', 'ekg_3.csv']
+#     max_mse = 0.0001  # 0.0008 also works. But error threshold too small do not work
+
+#     file_list = []
+#     for n in name1:
+#         file_list.append(os.path.join('ekg_data', n))
+#     print("list created")
+#     sources = file_list
+
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
+
+
+# def case_sony(args):
+#     name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
+#              'SonyAIBORobotSurface1_TEST_5_class_1']
+#     name2 = ['SonyAIBORobotSurface1_TEST_2_class_2', 'SonyAIBORobotSurface1_TEST_3_class_2',
+#              'SonyAIBORobotSurface1_TEST_8_class_2']
+#     folder = 'sony'
 
-    max_mse = 0.1
+#     max_mse = 0.1
 
-
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join(folder, n + '.csv'))
-    print("list created")
-    sources = file_list
-
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-    file_list = []
-    for n in name2:
-        file_list.append(os.path.join(folder, n + '.csv'))
-    print("list created")
-    sources = file_list
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
-
-
-def case_sony_2(args):
-    name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
-             'SonyAIBORobotSurface1_TEST_5_class_1', 'SonyAIBORobotSurface1_TEST_2_class_2',
-             'SonyAIBORobotSurface1_TEST_3_class_2',
-             'SonyAIBORobotSurface1_TEST_8_class_2']
-    folder = 'sony'
+
+#     file_list = []
+#     for n in name1:
+#         file_list.append(os.path.join(folder, n + '.csv'))
+#     print("list created")
+#     sources = file_list
+
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
+
+#     file_list = []
+#     for n in name2:
+#         file_list.append(os.path.join(folder, n + '.csv'))
+#     print("list created")
+#     sources = file_list
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
+
+
+# def case_sony_2(args):
+#     name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
+#              'SonyAIBORobotSurface1_TEST_5_class_1', 'SonyAIBORobotSurface1_TEST_2_class_2',
+#              'SonyAIBORobotSurface1_TEST_3_class_2',
+#              'SonyAIBORobotSurface1_TEST_8_class_2']
+#     folder = 'sony'
 
-    max_mse = 0.5
+#     max_mse = 0.5
 
 
-    file_list = []
-    for n in name1:
-        file_list.append(os.path.join(folder, n + '.csv'))
-    print("list created")
-    sources = file_list
+#     file_list = []
+#     for n in name1:
+#         file_list.append(os.path.join(folder, n + '.csv'))
+#     print("list created")
+#     sources = file_list
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
 
 
-def case_sony_interpretability(args, more_data=False):
-    if not more_data:
-        name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
-                 'SonyAIBORobotSurface1_TEST_5_class_1']  # change 5 to 6
+# def case_sony_interpretability(args, more_data=False):
+#     if not more_data:
+#         name1 = ['SonyAIBORobotSurface1_TEST_1_class_1', 'SonyAIBORobotSurface1_TEST_4_class_1',
+#                  'SonyAIBORobotSurface1_TEST_5_class_1']  # change 5 to 6
 
-        folder = 'sony'
+#         folder = 'sony'
 
-        max_mse = 0.5
+#         max_mse = 0.5
 
-        file_list = []
-        for n in name1:
-            file_list.append(os.path.join(folder, n + '.csv'))
-        print("list created")
-        sources = file_list
+#         file_list = []
+#         for n in name1:
+#             file_list.append(os.path.join(folder, n + '.csv'))
+#         print("list created")
+#         sources = file_list
 
-        max_delta_wcss = args.max_delta_wcss[0]
-        shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-        shapeit.mine_shape()
+#         max_delta_wcss = args.max_delta_wcss[0]
+#         shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#         shapeit.mine_shape()
 
-    else:
-        file_list = []
-        for filename in glob.glob(os.path.join('sony_more_data_class_1_only', "*.csv")):
-            file_list.append(filename)
+#     else:
+#         file_list = []
+#         for filename in glob.glob(os.path.join('sony_more_data_class_1_only', "*.csv")):
+#             file_list.append(filename)
 
-        sources = file_list
-        max_mse = 0.5  # was 0.5
+#         sources = file_list
+#         max_mse = 0.5  # was 0.5
 
-        max_delta_wcss = args.max_delta_wcss[0]
-        shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-        shapeit.mine_shape()
+#         max_delta_wcss = args.max_delta_wcss[0]
+#         shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#         shapeit.mine_shape()
 
 
-    alphabet_box = shapeit.get_alphabet_box_dict()  # get alphabet param range out.
+#     alphabet_box = shapeit.get_alphabet_box_dict()  # get alphabet param range out.
 
-    #### Here starts the trace from seg 2.
-    name2 = ['SonyAIBORobotSurface1_TEST_3_class_2']
-    folder = 'sony'
+#     #### Here starts the trace from seg 2.
+#     name2 = ['SonyAIBORobotSurface1_TEST_3_class_2']
+#     folder = 'sony'
 
-    max_mse = 0.5
+#     max_mse = 0.5
 
-    file_list = []
-    for n in name2: # only one trace here
-        file_list.append(os.path.join(folder, n + '.csv'))
-    print("list created")
-    sources = file_list
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     file_list = []
+#     for n in name2: # only one trace here
+#         file_list.append(os.path.join(folder, n + '.csv'))
+#     print("list created")
+#     sources = file_list
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
 
-    alphabet_box2 = shapeit.segment_only()
+#     alphabet_box2 = shapeit.segment_only()
 
-    print(alphabet_box)
-    print(alphabet_box2)
+#     print(alphabet_box)
+#     print(alphabet_box2)
 
-    # check where does element in alphabet_box2 belongs in alphabet 1.
+#     # check where does element in alphabet_box2 belongs in alphabet 1.
 
-    belong = []
-    for seg_index, param in enumerate(alphabet_box2): # each param is of: [slope, relative_offset, duration]
-        for key, value in alphabet_box.items():
-            count = 0
-            for index, par in enumerate(param):
-                min_bound = value[0][index]
-                max_bound = value[1][index]
-                if min_bound <= par <= max_bound:  # has to all three param belongs to the regarding range
-                    count += 1
-                else:
-                    break
-            if count == 3:
-                belong.append([seg_index, key])  # seg, \in key
+#     belong = []
+#     for seg_index, param in enumerate(alphabet_box2): # each param is of: [slope, relative_offset, duration]
+#         for key, value in alphabet_box.items():
+#             count = 0
+#             for index, par in enumerate(param):
+#                 min_bound = value[0][index]
+#                 max_bound = value[1][index]
+#                 if min_bound <= par <= max_bound:  # has to all three param belongs to the regarding range
+#                     count += 1
+#                 else:
+#                     break
+#             if count == 3:
+#                 belong.append([seg_index, key])  # seg, \in key
 
 
-    print(belong)
+#     print(belong)
 
 
-def case_sony_3(args): # 40 training data each class
-    file_list = []
-    for filename in glob.glob(os.path.join('CaseStudies/sony_more_data', "*.csv")):
-        file_list.append(filename)
+# def case_sony_3(args): # 40 training data each class
+#     file_list = []
+#     for filename in glob.glob(os.path.join('CaseStudies/sony_more_data', "*.csv")):
+#         file_list.append(filename)
 
-    sources = file_list
-    max_mse = 0.5  # was 0.5
+#     sources = file_list
+#     max_mse = 0.5  # was 0.5
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
 
 
-def case_ekg_whole_data(args):
-    file_list = []
-    for filename in glob.glob(os.path.join('ekg_data/patient007/shifted_x', "*.csv")):
-        file_list.append(filename)
+# def case_ekg_whole_data(args):
+#     file_list = []
+#     for filename in glob.glob(os.path.join('ekg_data/patient007/shifted_x', "*.csv")):
+#         file_list.append(filename)
 
-    for filename2 in glob.glob(os.path.join('ekg_data/patient024/shifted_x', "*.csv")):
-        file_list.append(filename2)
+#     for filename2 in glob.glob(os.path.join('ekg_data/patient024/shifted_x', "*.csv")):
+#         file_list.append(filename2)
 
 
-    sources = file_list
-    max_mse = 0.001  # was 0.5
+#     sources = file_list
+#     max_mse = 0.001  # was 0.5
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
 
 
-def case_ekg_whole_data_seperate(args):
-    file_list = []
-    for filename in glob.glob(os.path.join('ekg_data/patient007/shifted_x', "*.csv")):
-        file_list.append(filename)
-        if len(file_list) > 20:
-            break
+# def case_ekg_whole_data_seperate(args):
+#     file_list = []
+#     for filename in glob.glob(os.path.join('ekg_data/patient007/shifted_x', "*.csv")):
+#         file_list.append(filename)
+#         if len(file_list) > 20:
+#             break
 
-    sources = file_list
-    max_mse = 0.001  # was 0.5
+#     sources = file_list
+#     max_mse = 0.001  # was 0.5
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
 
-    file_list2 = []
-    for filename2 in glob.glob(os.path.join('ekg_data/patient024/shifted_x', "*.csv")):
-        file_list2.append(filename2)
-        if len(file_list2) > 20:
-            break
+#     file_list2 = []
+#     for filename2 in glob.glob(os.path.join('ekg_data/patient024/shifted_x', "*.csv")):
+#         file_list2.append(filename2)
+#         if len(file_list2) > 20:
+#             break
 
-    sources = file_list2
-    max_mse = 0.001  # was 0.5
+#     sources = file_list2
+#     max_mse = 0.001  # was 0.5
 
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
 
 
+# def case_kleene_star(args):
+#     file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
+#     file_list =  ["data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"]
+#     file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-repeat.csv"]
+#     file_list = ["star_data/pulse1-1-repeat.csv"]
+#     # file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-2.csv"]
 
-def case_kleene_star(args):
-    file_list = ["data/pulse1-1.csv", "data/pulse1-2.csv", "data/pulse1-3.csv"]
-    file_list =  ["data/pulse2-1.csv", "data/pulse2-2.csv", "data/pulse2-3.csv"]
-    file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-repeat.csv"]
-    file_list = ["star_data/pulse1-1-repeat.csv"]
-    # file_list = ["data/pulse1-2.csv","data/pulse1-1.csv", "star_data/pulse1-1-2.csv"]
+#     # file_list = ["data/pulse1-2.csv", "star_data/pulse1-2-2.csv"]
 
-    # file_list = ["data/pulse1-2.csv", "star_data/pulse1-2-2.csv"]
+#     max_mse = 0.1
 
-    max_mse = 0.1
+#     sources = file_list
 
-    sources = file_list
-
-    max_delta_wcss = args.max_delta_wcss[0]
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
-    shapeit.mine_shape()
+#     max_delta_wcss = args.max_delta_wcss[0]
+#     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
+#     shapeit.mine_shape()
     
     
     
@@ -367,6 +366,7 @@ def main(data, max_delta, max_mse):
         case_wine(max_delta, max_mse )
 
 if __name__ == '__main__':
+    #main(data, max_delta, max_mse)
     main('meat', 10, 0.05)
 
 
