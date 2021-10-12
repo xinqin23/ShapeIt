@@ -360,7 +360,7 @@ def main(data, max_delta, max_mse):
         case_meat(max_delta, max_mse)
         
     elif data == 'fish':
-        case_fish()
+        case_fish(max_delta, max_mse )
         
     elif data == 'wine':
         case_wine(max_delta, max_mse )
