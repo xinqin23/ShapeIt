@@ -307,76 +307,66 @@ def case_kleene_star(args):
     
     
     
-def case_meat(max_delta):
+def case_meat(max_delta, max_mse):
     
     file_list = []
     for filename in glob.glob(os.path.join('data_ucr/Meat', "*.csv")):
         file_list.append(filename)
 
     sources = file_list
-    max_mse = 0.05
-
     max_delta_wcss = max_delta
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
     
-def case_wine(max_delta):
+def case_wine(max_delta, max_mse):
     
     file_list = []
     for filename in glob.glob(os.path.join('data_ucr/Wine', "*.csv")):
         file_list.append(filename)   
 
     sources = file_list
-    max_mse = 0.05
-
     max_delta_wcss = max_delta
-    shapeit = ShapeIt(sources, max_mse, max_delta_wcss),
+    shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
     
-def case_fish(max_delta):
+def case_fish(max_delta, max_mse):
     
     file_list = []
     for filename in glob.glob(os.path.join('data_ucr/Fish', "*.csv")):
         file_list.append(filename)
     
     sources = file_list
-    max_mse = 0.05 
-
     max_delta_wcss = max_delta
     shapeit = ShapeIt(sources, max_mse, max_delta_wcss)
     shapeit.mine_shape()
 
 
-def main():
-    args = Options().parse()
+def main(data, max_delta, max_mse):
+    
+    #args = Options().parse()
     # infer_shape(args)
-
     # gen_table1(args)
-
     #case_ekg(args)
     #case_ekg_2(args)
     #case_sony(args)
-
     # case_sony_2(args)
-
     # case_sony_interpretability(args, True)  # true means use more data
-
     # case_ekg_whole_data(args)
     #case_ekg_whole_data_seperate(args)
-
     # case_sony_3(args)
-
     # case_kleene_star(args)
-
-    # case_ekg_noise(args)
+    #case_ekg_noise(args)
     
-    #case_meat(10)
-    #case_fish(10)
-    #case_wine(10)
-
-
+    if data == 'meat':
+        case_meat(max_delta, max_mse)
+        
+    elif data == 'fish':
+        case_fish()
+        
+    elif data == 'wine':
+        case_wine(max_delta, max_mse )
 
 if __name__ == '__main__':
-    main()
+    main('meat', 10, 0.05)
 
 
