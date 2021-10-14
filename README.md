@@ -1,6 +1,5 @@
 # ShapeIt
-The tool.
-
+A tool for mining specifications of cyber-physical systems (CPS) from their real-valued behaviors.
 
 
 #### Installation:
