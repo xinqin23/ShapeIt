@@ -28,3 +28,5 @@ if __name__ == '__main__':
 
 ````
 
+#### Cite the Tool: [![DOI](https://zenodo.org/badge/238563183.svg)](https://zenodo.org/badge/latestdoi/238563183)
+
